@@ -359,53 +359,71 @@ function createCarousel(images, containerId) {
   const container = document.getElementById(containerId);
   if (!container || !images || images.length === 0) return;
   
-  let currentIndex = 0;
+  // Filter out empty strings
+  const validImages = images.filter(img => img && img.trim() !== '');
+  if (validImages.length === 0) return;
   
   container.innerHTML = `
     <div class="relative overflow-hidden rounded-xl">
-      <div class="carousel flex transition-transform duration-500" id="${containerId}-track">
-        ${images.map((img, i) => `
-          <div class="carousel-item w-full flex-shrink-0">
-            <img src="${img}" alt="Image ${i + 1}" class="w-full h-64 md:h-80 object-cover">
+      <div class="flex transition-transform duration-500 ease-in-out" id="${containerId}-track" style="width: ${validImages.length * 100}%;">
+        ${validImages.map((img, i) => `
+          <div class="flex-shrink-0" style="width: ${100 / validImages.length}%;">
+            <img src="${img}" alt="Image ${i + 1}" class="w-full h-64 md:h-80 object-cover" onerror="this.src='https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800'">
           </div>
         `).join('')}
       </div>
-      ${images.length > 1 ? `
-        <button onclick="prevSlide('${containerId}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-emerald-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition">
+      ${validImages.length > 1 ? `
+        <button onclick="prevSlide('${containerId}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-emerald-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition z-10">
           <i class="fas fa-chevron-left"></i>
         </button>
-        <button onclick="nextSlide('${containerId}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-emerald-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition">
+        <button onclick="nextSlide('${containerId}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-emerald-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition z-10">
           <i class="fas fa-chevron-right"></i>
         </button>
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          ${images.map((_, i) => `<div class="w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'}" id="${containerId}-dot-${i}"></div>`).join('')}
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          ${validImages.map((_, i) => `<button onclick="goToSlide('${containerId}', ${i})" class="w-3 h-3 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'} hover:bg-white transition" id="${containerId}-dot-${i}"></button>`).join('')}
+        </div>
+        <div class="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-10">
+          <span id="${containerId}-counter">1</span>/${validImages.length}
         </div>
       ` : ''}
     </div>
   `;
   
   window[`${containerId}Index`] = 0;
+  window[`${containerId}Total`] = validImages.length;
 }
+
+window.goToSlide = (containerId, index) => {
+  slideCarousel(containerId, index);
+};
 
 function slideCarousel(containerId, index) {
   const track = document.getElementById(`${containerId}-track`);
   if (!track) return;
   
-  const items = track.querySelectorAll('.carousel-item');
-  const totalItems = items.length;
+  const totalItems = window[`${containerId}Total`] || 1;
   
   if (index >= totalItems) index = 0;
   if (index < 0) index = totalItems - 1;
   
   window[`${containerId}Index`] = index;
-  track.style.transform = `translateX(-${index * 100}%)`;
+  
+  // Calculate the translate percentage based on total items
+  const translatePercent = (index * 100) / totalItems;
+  track.style.transform = `translateX(-${translatePercent}%)`;
   
   // Update dots
   for (let i = 0; i < totalItems; i++) {
     const dot = document.getElementById(`${containerId}-dot-${i}`);
     if (dot) {
-      dot.className = `w-2 h-2 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`;
+      dot.className = `w-3 h-3 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'} hover:bg-white transition`;
     }
+  }
+  
+  // Update counter
+  const counter = document.getElementById(`${containerId}-counter`);
+  if (counter) {
+    counter.textContent = index + 1;
   }
 }
 
