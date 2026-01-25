@@ -492,8 +492,16 @@ function renderRoomsCMS() {
   `;
 }
 
+// Temporary storage for content images during editing
+let tempWellnessImages = [];
+let tempGastroImages = [];
+
 // ============== CONTENT CMS ==============
 function renderContentCMS() {
+  // Initialize temp images from content
+  tempWellnessImages = [...(content.wellness?.images || [])];
+  tempGastroImages = [...(content.gastronomy?.images || [])];
+  
   return `
     <div class="space-y-6">
       <!-- Hero Section -->
@@ -518,6 +526,7 @@ function renderContentCMS() {
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Background Image URL</label>
             <input type="text" id="heroImage" value="${content.hero?.image || ''}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
+            ${content.hero?.image ? `<img src="${content.hero.image}" class="mt-2 h-24 object-cover rounded-lg" alt="Hero preview">` : ''}
           </div>
         </div>
         <button onclick="saveHeroContent()" class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
@@ -541,9 +550,36 @@ function renderContentCMS() {
             <h4 class="font-medium text-gray-700 mb-2">Cold Baths Description (Albanian)</h4>
             <textarea id="coldBathsDescAl" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${content.wellness?.coldBaths?.description?.al || ''}</textarea>
           </div>
-          <div>
-            <h4 class="font-medium text-gray-700 mb-2">Wellness Images (one URL per line)</h4>
-            <textarea id="wellnessImages" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${content.wellness?.images?.join('\n') || ''}</textarea>
+          
+          <!-- Wellness Images Management -->
+          <div class="border rounded-lg p-4 bg-gray-50">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              <i class="fas fa-images mr-1 text-emerald-600"></i>
+              Wellness Images (<span id="wellnessImageCount">${tempWellnessImages.length}</span>)
+            </label>
+            
+            <!-- Current Images Grid -->
+            <div id="wellnessImagesGrid" class="grid grid-cols-4 gap-2 mb-3">
+              ${tempWellnessImages.map((img, index) => `
+                <div class="relative group">
+                  <img src="${img}" alt="Wellness ${index + 1}" class="w-full h-16 object-cover rounded-lg border">
+                  <button type="button" onclick="removeWellnessImage(${index})" 
+                          class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+                    <i class="fas fa-times text-xs"></i>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+            
+            <!-- Add New Image -->
+            <div class="flex gap-2">
+              <input type="text" id="newWellnessImageUrl" placeholder="Paste image URL here..." 
+                     class="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500">
+              <button type="button" onclick="addWellnessImage()" 
+                      class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm">
+                <i class="fas fa-plus mr-1"></i>Add
+              </button>
+            </div>
           </div>
         </div>
         <button onclick="saveWellnessContent()" class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
@@ -562,9 +598,36 @@ function renderContentCMS() {
             <label class="block text-sm font-medium text-gray-700 mb-1">Description (Albanian)</label>
             <textarea id="gastroDescAl" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${content.gastronomy?.description?.al || ''}</textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Food Images (one URL per line)</label>
-            <textarea id="gastroImages" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${content.gastronomy?.images?.join('\n') || ''}</textarea>
+          
+          <!-- Gastronomy Images Management -->
+          <div class="border rounded-lg p-4 bg-gray-50">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              <i class="fas fa-images mr-1 text-emerald-600"></i>
+              Food Images (<span id="gastroImageCount">${tempGastroImages.length}</span>)
+            </label>
+            
+            <!-- Current Images Grid -->
+            <div id="gastroImagesGrid" class="grid grid-cols-4 gap-2 mb-3">
+              ${tempGastroImages.map((img, index) => `
+                <div class="relative group">
+                  <img src="${img}" alt="Food ${index + 1}" class="w-full h-16 object-cover rounded-lg border">
+                  <button type="button" onclick="removeGastroImage(${index})" 
+                          class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+                    <i class="fas fa-times text-xs"></i>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+            
+            <!-- Add New Image -->
+            <div class="flex gap-2">
+              <input type="text" id="newGastroImageUrl" placeholder="Paste image URL here..." 
+                     class="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500">
+              <button type="button" onclick="addGastroImage()" 
+                      class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm">
+                <i class="fas fa-plus mr-1"></i>Add
+              </button>
+            </div>
           </div>
         </div>
         <button onclick="saveGastroContent()" class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
@@ -573,6 +636,74 @@ function renderContentCMS() {
       </div>
     </div>
   `;
+}
+
+// Wellness image management functions
+window.addWellnessImage = () => {
+  const input = document.getElementById('newWellnessImageUrl');
+  const url = input.value.trim();
+  if (url) {
+    tempWellnessImages.push(url);
+    input.value = '';
+    refreshWellnessImagesGrid();
+  }
+};
+
+window.removeWellnessImage = (index) => {
+  tempWellnessImages.splice(index, 1);
+  refreshWellnessImagesGrid();
+};
+
+function refreshWellnessImagesGrid() {
+  const grid = document.getElementById('wellnessImagesGrid');
+  const countEl = document.getElementById('wellnessImageCount');
+  if (!grid) return;
+  
+  grid.innerHTML = tempWellnessImages.map((img, index) => `
+    <div class="relative group">
+      <img src="${img}" alt="Wellness ${index + 1}" class="w-full h-16 object-cover rounded-lg border">
+      <button type="button" onclick="removeWellnessImage(${index})" 
+              class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+  `).join('');
+  
+  if (countEl) countEl.textContent = tempWellnessImages.length;
+}
+
+// Gastronomy image management functions
+window.addGastroImage = () => {
+  const input = document.getElementById('newGastroImageUrl');
+  const url = input.value.trim();
+  if (url) {
+    tempGastroImages.push(url);
+    input.value = '';
+    refreshGastroImagesGrid();
+  }
+};
+
+window.removeGastroImage = (index) => {
+  tempGastroImages.splice(index, 1);
+  refreshGastroImagesGrid();
+};
+
+function refreshGastroImagesGrid() {
+  const grid = document.getElementById('gastroImagesGrid');
+  const countEl = document.getElementById('gastroImageCount');
+  if (!grid) return;
+  
+  grid.innerHTML = tempGastroImages.map((img, index) => `
+    <div class="relative group">
+      <img src="${img}" alt="Food ${index + 1}" class="w-full h-16 object-cover rounded-lg border">
+      <button type="button" onclick="removeGastroImage(${index})" 
+              class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+  `).join('');
+  
+  if (countEl) countEl.textContent = tempGastroImages.length;
 }
 
 // ============== REVIEWS CMS ==============
@@ -867,15 +998,21 @@ window.editBooking = (id) => {
   }, 100);
 };
 
+// Temporary storage for room images during editing
+let tempRoomImages = [];
+
 window.editRoom = (id) => {
   const room = rooms.find(r => r.id === id);
   if (!room) return;
+  
+  // Initialize temp images
+  tempRoomImages = [...room.images];
   
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modalContent');
   
   modalContent.innerHTML = `
-    <div class="p-6">
+    <div class="p-6 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-gray-800">Edit Room</h3>
         <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
@@ -916,9 +1053,38 @@ window.editRoom = (id) => {
           <label class="block text-sm font-medium text-gray-700 mb-1">Amenities (comma separated)</label>
           <input type="text" name="amenities" value="${room.amenities.join(', ')}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="wifi, tv, bathroom">
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Image URLs (one per line)</label>
-          <textarea name="images" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${room.images.join('\n')}</textarea>
+        
+        <!-- Image Management Section -->
+        <div class="border rounded-lg p-4 bg-gray-50">
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            <i class="fas fa-images mr-1 text-emerald-600"></i>
+            Room Images (${tempRoomImages.length})
+          </label>
+          
+          <!-- Current Images Grid -->
+          <div id="roomImagesGrid" class="grid grid-cols-3 gap-2 mb-3">
+            ${tempRoomImages.map((img, index) => `
+              <div class="relative group">
+                <img src="${img}" alt="Room ${index + 1}" class="w-full h-20 object-cover rounded-lg border">
+                <button type="button" onclick="removeRoomImage(${index})" 
+                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+                  <i class="fas fa-times"></i>
+                </button>
+                <span class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">${index + 1}</span>
+              </div>
+            `).join('')}
+          </div>
+          
+          <!-- Add New Image -->
+          <div class="flex gap-2">
+            <input type="text" id="newRoomImageUrl" placeholder="Paste image URL here..." 
+                   class="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500">
+            <button type="button" onclick="addRoomImage()" 
+                    class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm">
+              <i class="fas fa-plus mr-1"></i>Add
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i>Click the X button on images to remove them</p>
         </div>
         
         <div class="flex gap-3 pt-4">
@@ -954,7 +1120,7 @@ window.editRoom = (id) => {
       pricePerPerson: parseInt(formData.get('pricePerPerson')),
       capacity: parseInt(formData.get('capacity')),
       amenities: formData.get('amenities').split(',').map(a => a.trim()).filter(a => a),
-      images: formData.get('images').split('\n').map(i => i.trim()).filter(i => i)
+      images: tempRoomImages
     };
     
     await fetch(`/api/rooms/${id}`, {
@@ -968,6 +1134,44 @@ window.editRoom = (id) => {
     renderAdmin();
   });
 };
+
+// Room image management functions
+window.addRoomImage = () => {
+  const input = document.getElementById('newRoomImageUrl');
+  const url = input.value.trim();
+  if (url) {
+    tempRoomImages.push(url);
+    input.value = '';
+    refreshRoomImagesGrid();
+  }
+};
+
+window.removeRoomImage = (index) => {
+  tempRoomImages.splice(index, 1);
+  refreshRoomImagesGrid();
+};
+
+function refreshRoomImagesGrid() {
+  const grid = document.getElementById('roomImagesGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = tempRoomImages.map((img, index) => `
+    <div class="relative group">
+      <img src="${img}" alt="Room ${index + 1}" class="w-full h-20 object-cover rounded-lg border">
+      <button type="button" onclick="removeRoomImage(${index})" 
+              class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+        <i class="fas fa-times"></i>
+      </button>
+      <span class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">${index + 1}</span>
+    </div>
+  `).join('');
+  
+  // Update the count label
+  const label = grid.parentElement.querySelector('label');
+  if (label) {
+    label.innerHTML = `<i class="fas fa-images mr-1 text-emerald-600"></i> Room Images (${tempRoomImages.length})`;
+  }
+}
 
 window.editReview = (id) => {
   const review = reviews.find(r => r.id === id);
@@ -1060,7 +1264,7 @@ window.saveWellnessContent = async () => {
           al: document.getElementById('coldBathsDescAl').value
         }
       },
-      images: document.getElementById('wellnessImages').value.split('\n').map(i => i.trim()).filter(i => i)
+      images: tempWellnessImages
     }
   };
   
@@ -1082,7 +1286,7 @@ window.saveGastroContent = async () => {
         ...content.gastronomy?.description,
         al: document.getElementById('gastroDescAl').value
       },
-      images: document.getElementById('gastroImages').value.split('\n').map(i => i.trim()).filter(i => i)
+      images: tempGastroImages
     }
   };
   

@@ -889,12 +889,14 @@ function renderContact() {
             <div class="pt-6 border-t border-gray-200">
               <h3 class="font-semibold text-gray-800 text-lg mb-4">${t('contact.followUs')}</h3>
               <div class="flex gap-4">
-                <a href="https://www.facebook.com/hoteltermal/?locale=sq_AL" target="_blank" 
-                   class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition transform hover:scale-110">
+                <a href="https://www.facebook.com/hoteltermal/?locale=sq_AL" target="_blank" rel="noopener noreferrer"
+                   class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition transform hover:scale-110"
+                   onclick="window.open('https://www.facebook.com/hoteltermal/?locale=sq_AL', '_blank'); return false;">
                   <i class="fab fa-facebook-f text-2xl"></i>
                 </a>
-                <a href="https://www.instagram.com/hotel_termal/?hl=en" target="_blank"
-                   class="w-14 h-14 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white rounded-full flex items-center justify-center transition transform hover:scale-110">
+                <a href="https://www.instagram.com/hotel_termal/" target="_blank" rel="noopener noreferrer"
+                   class="w-14 h-14 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white rounded-full flex items-center justify-center transition transform hover:scale-110"
+                   onclick="window.open('https://www.instagram.com/hotel_termal/', '_blank'); return false;">
                   <i class="fab fa-instagram text-2xl"></i>
                 </a>
               </div>
