@@ -1335,144 +1335,82 @@ window.logout = () => {
 
 // ============== BLOG CMS ==============
 function renderBlogCMS() {
-  return `
-    <div class="space-y-6">
-      <div class="flex justify-between items-center">
-        <h3 class="text-xl font-bold text-gray-800">Blog Manager</h3>
-        <button 
-          onclick="openPostModal()"
-          class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">
-          <i class="fas fa-plus"></i>
-          New Post
-        </button>
-      </div>
-      
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr class="text-left text-sm text-gray-500">
-              <th class="px-6 py-3 font-medium">Image</th>
-              <th class="px-6 py-3 font-medium">Title</th>
-              <th class="px-6 py-3 font-medium">Slug</th>
-              <th class="px-6 py-3 font-medium">Date</th>
-              <th class="px-6 py-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${posts.map(post => `
-              <tr class="border-t hover:bg-gray-50">
-                <td class="px-6 py-4">
-                  ${post.image ? 
-                    `<img src="${post.image}" alt="${post.title?.al || ''}" class="w-16 h-12 object-cover rounded-lg">` :
-                    `<div class="w-16 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400"><i class="fas fa-image"></i></div>`
-                  }
-                </td>
-                <td class="px-6 py-4">
-                  <div>
-                    <p class="font-medium text-gray-800">${post.title?.al || 'Untitled'}</p>
-                    <p class="text-sm text-gray-500 truncate max-w-xs">${post.excerpt?.al || ''}</p>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-gray-600 text-sm font-mono">${post.slug || ''}</td>
-                <td class="px-6 py-4 text-gray-500 text-sm">${post.date || ''}</td>
-                <td class="px-6 py-4">
-                  <a href="/blog/${post.slug}" target="_blank" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition inline-block" title="View">
-                    <i class="fas fa-external-link-alt"></i>
-                  </a>
-                  <button onclick="editPost('${post.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="deletePost('${post.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        ${posts.length === 0 ? `
-          <div class="p-8 text-center text-gray-500">
-            <i class="fas fa-newspaper text-4xl mb-3 text-gray-300"></i>
-            <p>No blog posts yet. Click "New Post" to create one.</p>
-          </div>
-        ` : ''}
-      </div>
-    </div>
-  `;
+  let postsHTML = '';
+  posts.forEach(post => {
+    const imageCell = post.image 
+      ? '<img src="' + post.image + '" alt="' + (post.title?.al || '') + '" class="w-16 h-12 object-cover rounded-lg">'
+      : '<div class="w-16 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400"><i class="fas fa-image"></i></div>';
+    
+    postsHTML += '<tr class="border-t hover:bg-gray-50">' +
+      '<td class="px-6 py-4">' + imageCell + '</td>' +
+      '<td class="px-6 py-4"><div><p class="font-medium text-gray-800">' + (post.title?.al || 'Untitled') + '</p>' +
+      '<p class="text-sm text-gray-500 truncate max-w-xs">' + (post.excerpt?.al || '') + '</p></div></td>' +
+      '<td class="px-6 py-4 text-gray-600 text-sm font-mono">' + (post.slug || '') + '</td>' +
+      '<td class="px-6 py-4 text-gray-500 text-sm">' + (post.date || '') + '</td>' +
+      '<td class="px-6 py-4">' +
+        '<a href="/blog/' + post.slug + '" target="_blank" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition inline-block" title="View"><i class="fas fa-external-link-alt"></i></a>' +
+        '<button onclick="editPost(\'' + post.id + '\')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit"><i class="fas fa-edit"></i></button>' +
+        '<button onclick="deletePost(\'' + post.id + '\')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete"><i class="fas fa-trash"></i></button>' +
+      '</td></tr>';
+  });
+  
+  const emptyState = posts.length === 0 
+    ? '<div class="p-8 text-center text-gray-500"><i class="fas fa-newspaper text-4xl mb-3 text-gray-300"></i><p>No blog posts yet. Click "New Post" to create one.</p></div>' 
+    : '';
+  
+  return '<div class="space-y-6">' +
+    '<div class="flex justify-between items-center">' +
+      '<h3 class="text-xl font-bold text-gray-800">Blog Manager</h3>' +
+      '<button onclick="openPostModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">' +
+        '<i class="fas fa-plus"></i> New Post</button>' +
+    '</div>' +
+    '<div class="bg-white rounded-xl shadow-sm overflow-hidden">' +
+      '<table class="w-full"><thead class="bg-gray-50"><tr class="text-left text-sm text-gray-500">' +
+        '<th class="px-6 py-3 font-medium">Image</th>' +
+        '<th class="px-6 py-3 font-medium">Title</th>' +
+        '<th class="px-6 py-3 font-medium">Slug</th>' +
+        '<th class="px-6 py-3 font-medium">Date</th>' +
+        '<th class="px-6 py-3 font-medium">Actions</th>' +
+      '</tr></thead><tbody>' + postsHTML + '</tbody></table>' + emptyState +
+    '</div></div>';
 }
 
 window.openPostModal = (postData = null) => {
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modalContent');
   const isEdit = postData !== null;
+  const titleText = isEdit ? 'Edit' : 'Create New';
+  const btnText = isEdit ? 'Update' : 'Create';
+  const imagePreview = postData?.image ? '<img src="' + postData.image + '" class="mt-2 h-20 object-cover rounded-lg" alt="Preview">' : '';
   
-  modalContent.innerHTML = `
-    <div class="p-6 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold text-gray-800">${isEdit ? 'Edit' : 'Create New'} Blog Post</h3>
-        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
-          <i class="fas fa-times text-xl"></i>
-        </button>
-      </div>
-      
-      <form id="postForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title (Albanian) *</label>
-          <input type="text" name="titleAl" value="${postData?.title?.al || ''}" required 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title (English)</label>
-          <input type="text" name="titleEn" value="${postData?.title?.en || ''}" 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-          <input type="text" name="slug" value="${postData?.slug || ''}" 
-                 placeholder="auto-generated if empty"
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-          <input type="text" name="image" value="${postData?.image || ''}" 
-                 placeholder="https://images.unsplash.com/..."
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-          ${postData?.image ? `<img src="${postData.image}" class="mt-2 h-20 object-cover rounded-lg" alt="Preview">` : ''}
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Excerpt (Albanian) *</label>
-          <textarea name="excerptAl" rows="2" required
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${postData?.excerpt?.al || ''}</textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Full Content (Albanian - HTML) *</label>
-          <textarea name="contentAl" rows="6" required
-                    placeholder="<p>Your content here...</p>"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm">${postData?.content?.al || ''}</textarea>
-          <p class="text-xs text-gray-500 mt-1">Supports HTML tags: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;em&gt;</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Full Content (English - HTML)</label>
-          <textarea name="contentEn" rows="4"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm">${postData?.content?.en || ''}</textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-          <input type="date" name="date" value="${postData?.date || new Date().toISOString().split('T')[0]}" 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        
-        <div class="flex gap-3 pt-4">
-          <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-            Cancel
-          </button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-            ${isEdit ? 'Update' : 'Create'} Post
-          </button>
-        </div>
-      </form>
-    </div>
-  `;
+  modalContent.innerHTML = '<div class="p-6 max-h-[85vh] overflow-y-auto">' +
+    '<div class="flex justify-between items-center mb-6">' +
+      '<h3 class="text-xl font-bold text-gray-800">' + titleText + ' Blog Post</h3>' +
+      '<button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>' +
+    '</div>' +
+    '<form id="postForm" class="space-y-4">' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Title (Albanian) *</label>' +
+        '<input type="text" name="titleAl" value="' + (postData?.title?.al || '') + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Title (English)</label>' +
+        '<input type="text" name="titleEn" value="' + (postData?.title?.en || '') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>' +
+        '<input type="text" name="slug" value="' + (postData?.slug || '') + '" placeholder="auto-generated if empty" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>' +
+        '<input type="text" name="image" value="' + (postData?.image || '') + '" placeholder="https://images.unsplash.com/..." class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + imagePreview + '</div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Excerpt (Albanian) *</label>' +
+        '<textarea name="excerptAl" rows="2" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + (postData?.excerpt?.al || '') + '</textarea></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Full Content (Albanian - HTML) *</label>' +
+        '<textarea name="contentAl" rows="6" required placeholder="<p>Your content here...</p>" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm">' + (postData?.content?.al || '') + '</textarea>' +
+        '<p class="text-xs text-gray-500 mt-1">Supports HTML tags: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;em&gt;</p></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Full Content (English - HTML)</label>' +
+        '<textarea name="contentEn" rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm">' + (postData?.content?.en || '') + '</textarea></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Date</label>' +
+        '<input type="date" name="date" value="' + (postData?.date || new Date().toISOString().split('T')[0]) + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div class="flex gap-3 pt-4">' +
+        '<button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>' +
+        '<button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">' + btnText + ' Post</button>' +
+      '</div>' +
+    '</form></div>';
   
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1482,32 +1420,18 @@ window.openPostModal = (postData = null) => {
     const formData = new FormData(e.target);
     
     const post = {
-      title: {
-        al: formData.get('titleAl'),
-        en: formData.get('titleEn') || formData.get('titleAl')
-      },
+      title: { al: formData.get('titleAl'), en: formData.get('titleEn') || formData.get('titleAl') },
       slug: formData.get('slug'),
       image: formData.get('image') || '',
-      excerpt: {
-        al: formData.get('excerptAl'),
-        en: formData.get('excerptAl')
-      },
-      content: {
-        al: formData.get('contentAl'),
-        en: formData.get('contentEn') || formData.get('contentAl')
-      },
+      excerpt: { al: formData.get('excerptAl'), en: formData.get('excerptAl') },
+      content: { al: formData.get('contentAl'), en: formData.get('contentEn') || formData.get('contentAl') },
       date: formData.get('date')
     };
     
-    const url = isEdit ? \`/api/posts/\${postData.id}\` : '/api/posts';
+    const url = isEdit ? '/api/posts/' + postData.id : '/api/posts';
     const method = isEdit ? 'PUT' : 'POST';
     
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(post)
-    });
-    
+    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(post) });
     await fetchAllData();
     closeModal();
     renderAdmin();
@@ -1516,14 +1440,12 @@ window.openPostModal = (postData = null) => {
 
 window.editPost = (id) => {
   const post = posts.find(p => p.id === id);
-  if (post) {
-    openPostModal(post);
-  }
+  if (post) openPostModal(post);
 };
 
 window.deletePost = async (id) => {
   if (!confirm('Are you sure you want to delete this blog post?')) return;
-  await fetch(\`/api/posts/\${id}\`, { method: 'DELETE' });
+  await fetch('/api/posts/' + id, { method: 'DELETE' });
   await fetchAllData();
   renderAdmin();
 };
@@ -1533,140 +1455,78 @@ function renderFinance() {
   const profitClass = financeStats.netProfit >= 0 ? 'text-emerald-600' : 'text-red-600';
   const profitIcon = financeStats.netProfit >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
   const profitBg = financeStats.netProfit >= 0 ? 'bg-emerald-100' : 'bg-red-100';
+  const profitText = financeStats.netProfit >= 0 ? 'Fitim' : 'Humbje';
   
-  return \`
-    <div class="space-y-6">
-      <!-- Year Filter -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <i class="fas fa-coins text-emerald-600"></i>
-            Sistemi Financiar
-          </h3>
-          <div class="flex items-center gap-4">
-            <label class="text-sm text-gray-600">Viti:</label>
-            <select onchange="changeYear(this.value)" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500">
-              <option value="2025" \${selectedYear === '2025' ? 'selected' : ''}>2025</option>
-              <option value="2026" \${selectedYear === '2026' ? 'selected' : ''}>2026</option>
-              <option value="2027" \${selectedYear === '2027' ? 'selected' : ''}>2027</option>
-            </select>
-            <button onclick="openExpenseModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">
-              <i class="fas fa-plus"></i>
-              Shto Shpenzim
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">Të Ardhurat (Revenue)</p>
-              <p class="text-2xl font-bold text-emerald-600">€\${financeStats.totalRevenue || 0}</p>
-            </div>
-            <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-hand-holding-usd text-emerald-600 text-xl"></i>
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 mt-2">Nga rezervimet e konfirmuara</p>
-        </div>
-        
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">Shpenzimet (Expenses)</p>
-              <p class="text-2xl font-bold text-red-600">€\${financeStats.totalExpenses || 0}</p>
-            </div>
-            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-credit-card text-red-600 text-xl"></i>
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 mt-2">Total shpenzimet për vitin \${selectedYear}</p>
-        </div>
-        
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">Fitimi Neto (Net Profit)</p>
-              <p class="text-2xl font-bold \${profitClass}">€\${financeStats.netProfit || 0}</p>
-            </div>
-            <div class="w-12 h-12 \${profitBg} rounded-lg flex items-center justify-center">
-              <i class="fas \${profitIcon} \${profitClass} text-xl"></i>
-            </div>
-          </div>
-          <p class="text-xs \${profitClass} mt-2">
-            <i class="fas \${profitIcon} mr-1"></i>
-            \${financeStats.netProfit >= 0 ? 'Fitim' : 'Humbje'}
-          </p>
-        </div>
-      </div>
-      
-      <!-- Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Expense Pie Chart -->
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-          <h3 class="font-bold text-gray-800 mb-4">Shpenzimet sipas Kategorisë</h3>
-          <div class="h-64">
-            <canvas id="expensePieChart"></canvas>
-          </div>
-        </div>
-        
-        <!-- Monthly Profit/Loss Bar Chart -->
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-          <h3 class="font-bold text-gray-800 mb-4">Fitimi/Humbja Mujore</h3>
-          <div class="h-64">
-            <canvas id="profitLossChart"></canvas>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Expense Records Table -->
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="p-6 border-b">
-          <h3 class="font-bold text-gray-800">Regjistri i Shpenzimeve</h3>
-        </div>
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr class="text-left text-sm text-gray-500">
-              <th class="px-6 py-3 font-medium">Data</th>
-              <th class="px-6 py-3 font-medium">Kategoria</th>
-              <th class="px-6 py-3 font-medium">Përshkrimi</th>
-              <th class="px-6 py-3 font-medium text-right">Shuma</th>
-              <th class="px-6 py-3 font-medium">Veprime</th>
-            </tr>
-          </thead>
-          <tbody>
-            \${financeRecords.map(record => \`
-              <tr class="border-t hover:bg-gray-50">
-                <td class="px-6 py-4 text-gray-600 text-sm">\${record.date}</td>
-                <td class="px-6 py-4">
-                  <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">\${record.category}</span>
-                </td>
-                <td class="px-6 py-4 text-gray-800">\${record.description}</td>
-                <td class="px-6 py-4 text-right font-medium text-red-600">€\${record.amount}</td>
-                <td class="px-6 py-4">
-                  <button onclick="editExpense('\${record.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="deleteExpense('\${record.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            \`).join('')}
-          </tbody>
-        </table>
-        \${financeRecords.length === 0 ? \`
-          <div class="p-8 text-center text-gray-500">
-            <i class="fas fa-receipt text-4xl mb-3 text-gray-300"></i>
-            <p>Nuk ka shpenzime për vitin \${selectedYear}.</p>
-          </div>
-        \` : ''}
-      </div>
-    </div>
-  \`;
+  // Year selector options
+  const yearOptions = ['2025', '2026', '2027'].map(y => 
+    '<option value="' + y + '"' + (selectedYear === y ? ' selected' : '') + '>' + y + '</option>'
+  ).join('');
+  
+  // Finance records table rows
+  let recordsHTML = '';
+  financeRecords.forEach(record => {
+    recordsHTML += '<tr class="border-t hover:bg-gray-50">' +
+      '<td class="px-6 py-4 text-gray-600 text-sm">' + record.date + '</td>' +
+      '<td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">' + record.category + '</span></td>' +
+      '<td class="px-6 py-4 text-gray-800">' + record.description + '</td>' +
+      '<td class="px-6 py-4 text-right font-medium text-red-600">€' + record.amount + '</td>' +
+      '<td class="px-6 py-4">' +
+        '<button onclick="editExpense(\'' + record.id + '\')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><i class="fas fa-edit"></i></button>' +
+        '<button onclick="deleteExpense(\'' + record.id + '\')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><i class="fas fa-trash"></i></button>' +
+      '</td></tr>';
+  });
+  
+  const emptyState = financeRecords.length === 0 
+    ? '<div class="p-8 text-center text-gray-500"><i class="fas fa-receipt text-4xl mb-3 text-gray-300"></i><p>Nuk ka shpenzime për vitin ' + selectedYear + '.</p></div>' 
+    : '';
+  
+  return '<div class="space-y-6">' +
+    // Year Filter Header
+    '<div class="bg-white rounded-xl shadow-sm p-6">' +
+      '<div class="flex items-center justify-between flex-wrap gap-4">' +
+        '<h3 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-coins text-emerald-600"></i> Sistemi Financiar</h3>' +
+        '<div class="flex items-center gap-4">' +
+          '<label class="text-sm text-gray-600">Viti:</label>' +
+          '<select onchange="changeYear(this.value)" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500">' + yearOptions + '</select>' +
+          '<button onclick="openExpenseModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2"><i class="fas fa-plus"></i> Shto Shpenzim</button>' +
+        '</div></div></div>' +
+    // KPI Cards
+    '<div class="grid grid-cols-1 md:grid-cols-3 gap-6">' +
+      // Revenue Card
+      '<div class="bg-white rounded-xl p-6 shadow-sm">' +
+        '<div class="flex items-center justify-between">' +
+          '<div><p class="text-sm text-gray-500">Të Ardhurat (Revenue)</p><p class="text-2xl font-bold text-emerald-600">€' + (financeStats.totalRevenue || 0) + '</p></div>' +
+          '<div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center"><i class="fas fa-hand-holding-usd text-emerald-600 text-xl"></i></div>' +
+        '</div><p class="text-xs text-gray-500 mt-2">Nga rezervimet e konfirmuara</p></div>' +
+      // Expenses Card
+      '<div class="bg-white rounded-xl p-6 shadow-sm">' +
+        '<div class="flex items-center justify-between">' +
+          '<div><p class="text-sm text-gray-500">Shpenzimet (Expenses)</p><p class="text-2xl font-bold text-red-600">€' + (financeStats.totalExpenses || 0) + '</p></div>' +
+          '<div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"><i class="fas fa-credit-card text-red-600 text-xl"></i></div>' +
+        '</div><p class="text-xs text-gray-500 mt-2">Total shpenzimet për vitin ' + selectedYear + '</p></div>' +
+      // Net Profit Card
+      '<div class="bg-white rounded-xl p-6 shadow-sm">' +
+        '<div class="flex items-center justify-between">' +
+          '<div><p class="text-sm text-gray-500">Fitimi Neto (Net Profit)</p><p class="text-2xl font-bold ' + profitClass + '">€' + (financeStats.netProfit || 0) + '</p></div>' +
+          '<div class="w-12 h-12 ' + profitBg + ' rounded-lg flex items-center justify-center"><i class="fas ' + profitIcon + ' ' + profitClass + ' text-xl"></i></div>' +
+        '</div><p class="text-xs ' + profitClass + ' mt-2"><i class="fas ' + profitIcon + ' mr-1"></i>' + profitText + '</p></div>' +
+    '</div>' +
+    // Charts
+    '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' +
+      '<div class="bg-white rounded-xl p-6 shadow-sm"><h3 class="font-bold text-gray-800 mb-4">Shpenzimet sipas Kategorisë</h3><div class="h-64"><canvas id="expensePieChart"></canvas></div></div>' +
+      '<div class="bg-white rounded-xl p-6 shadow-sm"><h3 class="font-bold text-gray-800 mb-4">Fitimi/Humbja Mujore</h3><div class="h-64"><canvas id="profitLossChart"></canvas></div></div>' +
+    '</div>' +
+    // Records Table
+    '<div class="bg-white rounded-xl shadow-sm overflow-hidden">' +
+      '<div class="p-6 border-b"><h3 class="font-bold text-gray-800">Regjistri i Shpenzimeve</h3></div>' +
+      '<table class="w-full"><thead class="bg-gray-50"><tr class="text-left text-sm text-gray-500">' +
+        '<th class="px-6 py-3 font-medium">Data</th>' +
+        '<th class="px-6 py-3 font-medium">Kategoria</th>' +
+        '<th class="px-6 py-3 font-medium">Përshkrimi</th>' +
+        '<th class="px-6 py-3 font-medium text-right">Shuma</th>' +
+        '<th class="px-6 py-3 font-medium">Veprime</th>' +
+      '</tr></thead><tbody>' + recordsHTML + '</tbody></table>' + emptyState +
+    '</div></div>';
 }
 
 function initFinanceCharts() {
@@ -1771,52 +1631,35 @@ window.openExpenseModal = (expenseData = null) => {
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modalContent');
   const isEdit = expenseData !== null;
+  const titleText = isEdit ? 'Edito' : 'Shto';
+  const btnText = isEdit ? 'Ruaj' : 'Shto';
   
-  modalContent.innerHTML = \`
-    <div class="p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold text-gray-800">\${isEdit ? 'Edito' : 'Shto'} Shpenzim</h3>
-        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
-          <i class="fas fa-times text-xl"></i>
-        </button>
-      </div>
-      
-      <form id="expenseForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-          <input type="date" name="date" value="\${expenseData?.date || new Date().toISOString().split('T')[0]}" required 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kategoria</label>
-          <select name="category" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-            \${expenseCategories.map(cat => \`
-              <option value="\${cat}" \${expenseData?.category === cat ? 'selected' : ''}>\${cat}</option>
-            \`).join('')}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Shuma (€)</label>
-          <input type="number" name="amount" value="\${expenseData?.amount || ''}" min="0" step="0.01" required 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Përshkrimi</label>
-          <input type="text" name="description" value="\${expenseData?.description || ''}" required 
-                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-        </div>
-        
-        <div class="flex gap-3 pt-4">
-          <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-            Anulo
-          </button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-            \${isEdit ? 'Ruaj' : 'Shto'}
-          </button>
-        </div>
-      </form>
-    </div>
-  \`;
+  // Build category options
+  let categoryOptions = '';
+  expenseCategories.forEach(cat => {
+    const selected = expenseData?.category === cat ? ' selected' : '';
+    categoryOptions += '<option value="' + cat + '"' + selected + '>' + cat + '</option>';
+  });
+  
+  modalContent.innerHTML = '<div class="p-6">' +
+    '<div class="flex justify-between items-center mb-6">' +
+      '<h3 class="text-xl font-bold text-gray-800">' + titleText + ' Shpenzim</h3>' +
+      '<button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>' +
+    '</div>' +
+    '<form id="expenseForm" class="space-y-4">' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Data</label>' +
+        '<input type="date" name="date" value="' + (expenseData?.date || new Date().toISOString().split('T')[0]) + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Kategoria</label>' +
+        '<select name="category" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + categoryOptions + '</select></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Shuma (€)</label>' +
+        '<input type="number" name="amount" value="' + (expenseData?.amount || '') + '" min="0" step="0.01" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Përshkrimi</label>' +
+        '<input type="text" name="description" value="' + (expenseData?.description || '') + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div class="flex gap-3 pt-4">' +
+        '<button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Anulo</button>' +
+        '<button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">' + btnText + '</button>' +
+      '</div>' +
+    '</form></div>';
   
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1832,15 +1675,10 @@ window.openExpenseModal = (expenseData = null) => {
       description: formData.get('description')
     };
     
-    const url = isEdit ? \`/api/finance/\${expenseData.id}\` : '/api/finance';
+    const url = isEdit ? '/api/finance/' + expenseData.id : '/api/finance';
     const method = isEdit ? 'PUT' : 'POST';
     
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expense)
-    });
-    
+    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expense) });
     await fetchAllData();
     closeModal();
     renderAdmin();
@@ -1849,14 +1687,12 @@ window.openExpenseModal = (expenseData = null) => {
 
 window.editExpense = (id) => {
   const expense = financeRecords.find(f => f.id === id);
-  if (expense) {
-    openExpenseModal(expense);
-  }
+  if (expense) openExpenseModal(expense);
 };
 
 window.deleteExpense = async (id) => {
   if (!confirm('Jeni i sigurt që doni të fshini këtë shpenzim?')) return;
-  await fetch(\`/api/finance/\${id}\`, { method: 'DELETE' });
+  await fetch('/api/finance/' + id, { method: 'DELETE' });
   await fetchAllData();
   renderAdmin();
 };
