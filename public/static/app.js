@@ -302,6 +302,7 @@ let currentLang = localStorage.getItem('lang') || 'al';
 let content = {};
 let rooms = [];
 let reviews = [];
+let posts = [];
 let menuOpen = false;
 
 // ============== UTILITY FUNCTIONS ==============
@@ -341,14 +342,16 @@ const amenityNames = {
 // ============== FETCH DATA ==============
 async function fetchData() {
   try {
-    const [contentRes, roomsRes, reviewsRes] = await Promise.all([
+    const [contentRes, roomsRes, reviewsRes, postsRes] = await Promise.all([
       fetch('/api/content'),
       fetch('/api/rooms'),
-      fetch('/api/reviews')
+      fetch('/api/reviews'),
+      fetch('/api/posts')
     ]);
     content = await contentRes.json();
     rooms = await roomsRes.json();
     reviews = await reviewsRes.json();
+    posts = await postsRes.json();
   } catch (error) {
     console.error('Error fetching data:', error);
   }
@@ -452,6 +455,7 @@ function renderApp() {
     ${renderNavigation()}
     ${renderHero()}
     ${renderRooms()}
+    ${renderNews()}
     ${renderWellness()}
     ${renderPhysiotherapy()}
     ${renderGastronomy()}
@@ -658,6 +662,72 @@ function renderRooms() {
               </div>
             </div>
           `).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+// ============== NEWS/BLOG SECTION ==============
+function renderNews() {
+  // Only show latest 3 posts
+  const latestPosts = posts.slice(0, 3);
+  
+  if (latestPosts.length === 0) {
+    return ''; // Don't render section if no posts
+  }
+  
+  const newsTranslations = {
+    al: { title: 'Të Rejat', subtitle: 'Lajmet dhe artikujt më të fundit', readMore: 'Lexo Më Shumë', viewAll: 'Shiko të gjitha' },
+    en: { title: 'News', subtitle: 'Latest news and articles', readMore: 'Read More', viewAll: 'View All' },
+    de: { title: 'Neuigkeiten', subtitle: 'Neueste Nachrichten und Artikel', readMore: 'Mehr lesen', viewAll: 'Alle anzeigen' },
+    it: { title: 'Novità', subtitle: 'Ultime notizie e articoli', readMore: 'Leggi di più', viewAll: 'Vedi tutti' },
+    fr: { title: 'Actualités', subtitle: 'Dernières nouvelles et articles', readMore: 'Lire la suite', viewAll: 'Voir tout' }
+  };
+  
+  const newsT = newsTranslations[currentLang] || newsTranslations.al;
+  
+  return `
+    <section id="news" class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-4">${newsT.title}</h2>
+          <p class="text-gray-600 text-lg">${newsT.subtitle}</p>
+          <div class="w-24 h-1 bg-emerald-500 mx-auto mt-4 rounded-full"></div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          ${latestPosts.map(post => {
+            const hasImage = post.image && post.image.trim() !== '';
+            return `
+              <article class="bg-beige-50 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow group">
+                ${hasImage ? `
+                  <a href="/blog/${post.slug}" class="block overflow-hidden">
+                    <img src="${post.image}" alt="${getLocalizedText(post.title)}" 
+                         class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                         onerror="this.style.display='none'">
+                  </a>
+                ` : `
+                  <div class="h-4 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+                `}
+                <div class="p-6">
+                  <div class="flex items-center gap-2 text-sm text-emerald-600 mb-3">
+                    <i class="far fa-calendar-alt"></i>
+                    <time datetime="${post.date}">${new Date(post.date).toLocaleDateString(currentLang === 'al' ? 'sq-AL' : currentLang, { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                  </div>
+                  <h3 class="font-serif font-bold text-xl text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors">
+                    <a href="/blog/${post.slug}">${getLocalizedText(post.title)}</a>
+                  </h3>
+                  <p class="text-gray-600 text-sm mb-4 line-clamp-3">${getLocalizedText(post.excerpt)}</p>
+                  <a href="/blog/${post.slug}" 
+                     class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium text-sm transition">
+                    ${newsT.readMore}
+                    <i class="fas fa-arrow-right text-xs"></i>
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join('')}
         </div>
       </div>
     </section>

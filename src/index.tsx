@@ -118,6 +118,67 @@ let reviewsData = [
   { id: '5', name: 'Besnik L.', rating: 5, text: { al: 'Hotel fantastik me pamje të bukura malore. Rekomanoj për të gjithë!', en: 'Fantastic hotel with beautiful mountain views. I recommend it to everyone!', de: 'Fantastisches Hotel mit wunderschöner Bergaussicht. Ich empfehle es jedem!', it: 'Hotel fantastico con splendida vista sulle montagne. Lo consiglio a tutti!', fr: 'Hôtel fantastique avec de belles vues sur les montagnes. Je le recommande à tous!' }, date: '2025-08-18' }
 ]
 
+// ============== BLOG DATA ==============
+let postsData: any[] = [
+  {
+    id: '1',
+    title: { al: 'Përfitimet Shëndetësore të Ujërave Termale', en: 'Health Benefits of Thermal Waters', de: 'Gesundheitsvorteile von Thermalwasser', it: 'Benefici per la salute delle acque termali', fr: 'Bienfaits des eaux thermales pour la santé' },
+    slug: 'perfitimet-shendetesore-ujerat-termale',
+    excerpt: { al: 'Zbuloni se si ujërat termale të Peshkopisë mund të përmirësojnë shëndetin tuaj.', en: 'Discover how Peshkopi thermal waters can improve your health.', de: 'Entdecken Sie, wie Peshkopi-Thermalwasser Ihre Gesundheit verbessern kann.', it: 'Scopri come le acque termali di Peshkopi possono migliorare la tua salute.', fr: 'Découvrez comment les eaux thermales de Peshkopi peuvent améliorer votre santé.' },
+    content: { al: '<p>Ujërat termale të Peshkopisë kanë qenë të njohura për shekuj për vetitë e tyre kurative. Të pasura me minerale si squfur, kalcium dhe magnez, këto ujëra ndihmojnë në trajtimin e:</p><ul><li>Reumatizmit dhe artritit</li><li>Problemeve të lëkurës</li><li>Stresit dhe ankthit</li><li>Dhimbjeve muskulore</li></ul><p>Vizitoni Hotel Termal Peshkopi për të përjetuar këto përfitime vetë!</p>', en: '<p>The thermal waters of Peshkopi have been known for centuries for their curative properties. Rich in minerals such as sulfur, calcium and magnesium, these waters help treat:</p><ul><li>Rheumatism and arthritis</li><li>Skin problems</li><li>Stress and anxiety</li><li>Muscle pain</li></ul><p>Visit Hotel Termal Peshkopi to experience these benefits yourself!</p>', de: '<p>Die Thermalquellen von Peshkopi sind seit Jahrhunderten für ihre heilenden Eigenschaften bekannt.</p>', it: '<p>Le acque termali di Peshkopi sono note da secoli per le loro proprietà curative.</p>', fr: '<p>Les eaux thermales de Peshkopi sont connues depuis des siècles pour leurs propriétés curatives.</p>' },
+    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+    date: '2026-01-15'
+  },
+  {
+    id: '2',
+    title: { al: 'Kuzhina Tradicionale Dibrane - Një Udhëtim Gastronomik', en: 'Traditional Dibran Cuisine - A Gastronomic Journey', de: 'Traditionelle Dibran-Küche - Eine gastronomische Reise', it: 'Cucina tradizionale Dibrana - Un viaggio gastronomico', fr: 'Cuisine traditionnelle de Dibran - Un voyage gastronomique' },
+    slug: 'kuzhina-tradicionale-dibrane',
+    excerpt: { al: 'Eksploroni shijet autentike të rajonit të Dibrës në restorantin tonë.', en: 'Explore the authentic flavors of the Dibra region in our restaurant.', de: 'Entdecken Sie die authentischen Aromen der Region Dibra in unserem Restaurant.', it: 'Esplora i sapori autentici della regione di Dibra nel nostro ristorante.', fr: 'Explorez les saveurs authentiques de la région de Dibra dans notre restaurant.' },
+    content: { al: '<p>Kuzhina dibrane është një thesar i traditës shqiptare. Në Hotel Termal Peshkopi, ne ofrojmë pjata të përgatitura me produkte lokale të freskëta.</p><h3>Pjatat tona të veçanta:</h3><ul><li>Flija - ëmbëlsira tradicionale me shumë shtresa</li><li>Tavë kosi - mish qengji me kos</li><li>Byrek me spinaq dhe djathë</li></ul>', en: '<p>Dibran cuisine is a treasure of Albanian tradition. At Hotel Termal Peshkopi, we offer dishes prepared with fresh local products.</p>', de: '<p>Die Dibran-Küche ist ein Schatz der albanischen Tradition.</p>', it: '<p>La cucina Dibrana è un tesoro della tradizione albanese.</p>', fr: '<p>La cuisine de Dibran est un trésor de la tradition albanaise.</p>' },
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+    date: '2026-01-10'
+  },
+  {
+    id: '3',
+    title: { al: 'Sezoni i Dimrit në Peshkopi - Aktivitete dhe Relaksim', en: 'Winter Season in Peshkopi - Activities and Relaxation', de: 'Wintersaison in Peshkopi - Aktivitäten und Entspannung', it: 'Stagione invernale a Peshkopi - Attività e relax', fr: 'Saison d\'hiver à Peshkopi - Activités et détente' },
+    slug: 'sezoni-dimrit-peshkopi',
+    excerpt: { al: 'Pse dimri është koha perfekte për të vizituar ujërat termale.', en: 'Why winter is the perfect time to visit thermal waters.', de: 'Warum der Winter die perfekte Zeit ist, um Thermalwasser zu besuchen.', it: 'Perché l\'inverno è il momento perfetto per visitare le acque termali.', fr: 'Pourquoi l\'hiver est le moment idéal pour visiter les eaux thermales.' },
+    content: { al: '<p>Dimri në Peshkopi ofron një eksperiencë unike. Imagjinoni të zhyteni në ujëra të ngrohta termale ndërsa dëbora bie përreth!</p><p>Përveç ujërave termale, mund të shijoni:</p><ul><li>Ski në malin e Korabit</li><li>Ecje në natyrë</li><li>Fotografi të bukura peizazhi</li></ul>', en: '<p>Winter in Peshkopi offers a unique experience. Imagine diving into warm thermal waters while snow falls around you!</p>', de: '<p>Der Winter in Peshkopi bietet ein einzigartiges Erlebnis.</p>', it: '<p>L\'inverno a Peshkopi offre un\'esperienza unica.</p>', fr: '<p>L\'hiver à Peshkopi offre une expérience unique.</p>' },
+    image: '',
+    date: '2026-01-05'
+  }
+]
+
+// ============== FINANCE DATA ==============
+let financeData: any[] = [
+  { id: '1', date: '2026-01-05', amount: 150, category: 'Fatura (Drita/Ujë/Internet)', description: 'Fatura e dritave - Janar' },
+  { id: '2', date: '2026-01-10', amount: 500, category: 'Furnizim (Ushqime/Pije)', description: 'Furnizim javore ushqimore' },
+  { id: '3', date: '2026-01-15', amount: 1200, category: 'Rroga Punëtorësh', description: 'Paga - Recepsionist' },
+  { id: '4', date: '2026-01-15', amount: 1000, category: 'Rroga Punëtorësh', description: 'Paga - Pastrues' },
+  { id: '5', date: '2026-01-20', amount: 200, category: 'Materiale', description: 'Produkte pastrimi' },
+  { id: '6', date: '2026-01-25', amount: 350, category: 'Pagesë Llixha (Taksa)', description: 'Taksë mujore llixhash' },
+  { id: '7', date: '2025-12-05', amount: 180, category: 'Fatura (Drita/Ujë/Internet)', description: 'Fatura e dritave - Dhjetor' },
+  { id: '8', date: '2025-12-10', amount: 450, category: 'Furnizim (Ushqime/Pije)', description: 'Furnizim javore' },
+  { id: '9', date: '2025-12-15', amount: 2200, category: 'Rroga Punëtorësh', description: 'Paga stafi' },
+  { id: '10', date: '2025-11-20', amount: 800, category: 'Pagesë Mirëmbajtje', description: 'Riparim sistemi ngrohje' },
+  { id: '11', date: '2025-11-10', amount: 250, category: 'Siguracione', description: 'Sigurim mujor' },
+  { id: '12', date: '2025-10-15', amount: 100, category: 'Shpenzime Online', description: 'Reklamë Facebook' }
+]
+
+// Expense categories
+const expenseCategories = [
+  'Shpenzime Online',
+  'Siguracione', 
+  'Fatura (Drita/Ujë/Internet)',
+  'Furnizim (Ushqime/Pije)',
+  'Rroga Punëtorësh',
+  'Materiale',
+  'Pagesë Mirëmbajtje',
+  'Pagesë Llixha (Taksa)',
+  'Shpenzime Personale',
+  'Shpenzime Shtetërore'
+]
+
 // Admin credentials
 const ADMIN_USER = 'admin'
 const ADMIN_PASS = 'peshkopi2026'
@@ -222,6 +283,149 @@ app.delete('/api/reviews/:id', (c) => {
   const id = c.req.param('id')
   reviewsData = reviewsData.filter(r => r.id !== id)
   return c.json({ success: true })
+})
+
+// ============== BLOG API ROUTES ==============
+
+// Get all posts
+app.get('/api/posts', (c) => {
+  return c.json(postsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+})
+
+// Get single post by slug
+app.get('/api/posts/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const post = postsData.find(p => p.slug === slug || p.id === slug)
+  if (!post) return c.json({ error: 'Post not found' }, 404)
+  return c.json(post)
+})
+
+// Create post (admin)
+app.post('/api/posts', async (c) => {
+  const post = await c.req.json()
+  post.id = Date.now().toString()
+  post.date = post.date || new Date().toISOString().split('T')[0]
+  // Generate slug from Albanian title if not provided
+  if (!post.slug && post.title?.al) {
+    post.slug = post.title.al.toLowerCase()
+      .replace(/[ëê]/g, 'e').replace(/[ç]/g, 'c').replace(/[ë]/g, 'e')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  }
+  postsData.push(post)
+  return c.json(post)
+})
+
+// Update post (admin)
+app.put('/api/posts/:id', async (c) => {
+  const id = c.req.param('id')
+  const updates = await c.req.json()
+  const index = postsData.findIndex(p => p.id === id)
+  if (index === -1) return c.json({ error: 'Post not found' }, 404)
+  postsData[index] = { ...postsData[index], ...updates }
+  return c.json(postsData[index])
+})
+
+// Delete post (admin)
+app.delete('/api/posts/:id', (c) => {
+  const id = c.req.param('id')
+  postsData = postsData.filter(p => p.id !== id)
+  return c.json({ success: true })
+})
+
+// ============== FINANCE API ROUTES ==============
+
+// Get expense categories
+app.get('/api/finance/categories', (c) => {
+  return c.json(expenseCategories)
+})
+
+// Get all finance records
+app.get('/api/finance', (c) => {
+  const year = c.req.query('year')
+  let data = financeData
+  if (year) {
+    data = financeData.filter(f => f.date.startsWith(year))
+  }
+  return c.json(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+})
+
+// Create finance record (admin)
+app.post('/api/finance', async (c) => {
+  const record = await c.req.json()
+  record.id = Date.now().toString()
+  record.amount = parseFloat(record.amount)
+  financeData.push(record)
+  return c.json(record)
+})
+
+// Update finance record (admin)
+app.put('/api/finance/:id', async (c) => {
+  const id = c.req.param('id')
+  const updates = await c.req.json()
+  const index = financeData.findIndex(f => f.id === id)
+  if (index === -1) return c.json({ error: 'Record not found' }, 404)
+  updates.amount = parseFloat(updates.amount)
+  financeData[index] = { ...financeData[index], ...updates }
+  return c.json(financeData[index])
+})
+
+// Delete finance record (admin)
+app.delete('/api/finance/:id', (c) => {
+  const id = c.req.param('id')
+  financeData = financeData.filter(f => f.id !== id)
+  return c.json({ success: true })
+})
+
+// Finance stats (admin)
+app.get('/api/finance/stats', (c) => {
+  const year = c.req.query('year') || new Date().getFullYear().toString()
+  
+  // Calculate revenue from bookings for the year
+  const yearBookings = bookingsData.filter(b => 
+    b.status === 'confirmed' && b.checkIn.startsWith(year)
+  )
+  const totalRevenue = yearBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0)
+  
+  // Calculate expenses for the year
+  const yearExpenses = financeData.filter(f => f.date.startsWith(year))
+  const totalExpenses = yearExpenses.reduce((sum, f) => sum + f.amount, 0)
+  
+  // Net profit
+  const netProfit = totalRevenue - totalExpenses
+  
+  // Expenses by category
+  const expensesByCategory: { [key: string]: number } = {}
+  yearExpenses.forEach(f => {
+    expensesByCategory[f.category] = (expensesByCategory[f.category] || 0) + f.amount
+  })
+  
+  // Monthly profit/loss
+  const monthlyData: { [key: string]: { revenue: number; expenses: number } } = {}
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  
+  months.forEach((month, i) => {
+    const monthNum = String(i + 1).padStart(2, '0')
+    const monthPrefix = `${year}-${monthNum}`
+    
+    const monthRevenue = bookingsData
+      .filter(b => b.status === 'confirmed' && b.checkIn.startsWith(monthPrefix))
+      .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
+    
+    const monthExpenses = financeData
+      .filter(f => f.date.startsWith(monthPrefix))
+      .reduce((sum, f) => sum + f.amount, 0)
+    
+    monthlyData[month] = { revenue: monthRevenue, expenses: monthExpenses }
+  })
+  
+  return c.json({
+    year,
+    totalRevenue,
+    totalExpenses,
+    netProfit,
+    expensesByCategory,
+    monthlyData
+  })
 })
 
 // Get bookings (admin)
@@ -438,6 +642,7 @@ const getMainHTML = () => `<!DOCTYPE html>
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .hero-gradient { background: linear-gradient(135deg, rgba(5, 150, 105, 0.9) 0%, rgba(4, 120, 87, 0.8) 100%); }
     .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   </style>
 </head>
 <body class="bg-beige-50 text-gray-800">
@@ -566,6 +771,101 @@ const getLoginHTML = () => `<!DOCTYPE html>
 </body>
 </html>`
 
+// Blog post page HTML
+const getBlogPostHTML = (post: any) => `<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${post.title?.al || 'Blog'} - Hotel Termal Peshkopi</title>
+  <meta name="description" content="${post.excerpt?.al || ''}">
+  <meta property="og:title" content="${post.title?.al || 'Blog'}">
+  <meta property="og:description" content="${post.excerpt?.al || ''}">
+  ${post.image ? `<meta property="og:image" content="${post.image}">` : ''}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+            beige: { 50: '#fdfbf7', 100: '#f5f0e6' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Merriweather', 'serif'] }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { font-family: 'Merriweather', serif; }
+    .prose h3 { font-size: 1.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    .prose ul { list-style-type: disc; padding-left: 1.5rem; margin: 1rem 0; }
+    .prose li { margin: 0.5rem 0; }
+    .prose p { margin: 1rem 0; line-height: 1.8; }
+  </style>
+</head>
+<body class="bg-beige-50 text-gray-800">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 text-emerald-700 hover:text-emerald-800">
+        <i class="fas fa-arrow-left"></i>
+        <span class="font-medium">Kthehu në Kryefaqje</span>
+      </a>
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-spa text-white"></i>
+        </div>
+        <span class="font-serif font-bold text-emerald-800 hidden md:block">Hotel Termal</span>
+      </a>
+    </div>
+  </nav>
+
+  <article class="max-w-4xl mx-auto px-4 py-12">
+    ${post.image ? `
+      <img src="${post.image}" alt="${post.title?.al}" class="w-full h-64 md:h-96 object-cover rounded-2xl mb-8 shadow-lg">
+    ` : ''}
+    
+    <div class="mb-6">
+      <span class="text-emerald-600 text-sm font-medium">
+        <i class="far fa-calendar-alt mr-1"></i>
+        ${new Date(post.date).toLocaleDateString('sq-AL', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </span>
+    </div>
+    
+    <h1 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-6">${post.title?.al || ''}</h1>
+    
+    <div class="prose text-gray-700 text-lg leading-relaxed">
+      ${post.content?.al || ''}
+    </div>
+    
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <h3 class="font-serif font-bold text-emerald-800 mb-4">Na kontaktoni për më shumë informacion</h3>
+      <div class="flex flex-wrap gap-4">
+        <a href="https://wa.me/355684340580" target="_blank" class="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition">
+          <i class="fab fa-whatsapp text-xl"></i>
+          WhatsApp
+        </a>
+        <a href="tel:+355684340580" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition">
+          <i class="fas fa-phone"></i>
+          +355 68 434 0580
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer class="bg-emerald-900 text-white py-8 mt-12">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <p class="text-emerald-200">&copy; ${new Date().getFullYear()} Hotel Termal Peshkopi. Të gjitha të drejtat e rezervuara.</p>
+    </div>
+  </footer>
+</body>
+</html>`
+
 // Routes
 app.get('/', (c) => {
   return c.html(getMainHTML())
@@ -577,6 +877,16 @@ app.get('/login', (c) => {
 
 app.get('/admin', (c) => {
   return c.html(getAdminHTML())
+})
+
+// Blog single post page
+app.get('/blog/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const post = postsData.find(p => p.slug === slug)
+  if (!post) {
+    return c.html('<h1>Post not found</h1>', 404)
+  }
+  return c.html(getBlogPostHTML(post))
 })
 
 export default app
