@@ -361,34 +361,78 @@ app.put('/api/settings', async (c) => {
 
 // ============== 2FA PASSWORD CHANGE ENDPOINTS ==============
 
+// Helper function to send email via Resend API (works in Cloudflare Workers)
+// Since Gmail SMTP doesn't work in Cloudflare Workers, we use Resend's HTTP API
+// The smtpPassword field stores the Resend API key (e.g., re_xxxxxxxx)
+async function sendEmailViaResend(to: string, subject: string, body: string): Promise<{ success: boolean; error?: string }> {
+  const fromEmail = settingsData.adminEmail
+  const apiKey = settingsData.smtpPassword // Resend API key stored here
+  
+  if (!fromEmail || !apiKey) {
+    console.log('=== EMAIL SENDING SKIPPED: Credentials not configured ===')
+    console.log('To:', to)
+    console.log('Subject:', subject)
+    console.log('Body:', body)
+    console.log('===========================================')
+    return { 
+      success: false, 
+      error: 'Email credentials not configured. Please configure Resend API key in Settings > Email Settings.' 
+    }
+  }
+  
+  try {
+    console.log('=== SENDING EMAIL VIA RESEND API ===')
+    console.log('To:', to)
+    console.log('Subject:', subject)
+    
+    // Send email via Resend API
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        // Use Resend's default domain for testing, or your own verified domain
+        from: `Hotel Termal Peshkopi <onboarding@resend.dev>`,
+        to: [to],
+        subject: subject,
+        text: body,
+        reply_to: fromEmail
+      })
+    })
+    
+    const result = await response.json()
+    
+    if (!response.ok) {
+      console.error('Resend API error:', result)
+      throw new Error(result.message || result.error || `HTTP ${response.status}`)
+    }
+    
+    console.log('=== EMAIL SENT SUCCESSFULLY ===')
+    console.log('Email ID:', result.id)
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Email sending failed:', error)
+    return { 
+      success: false, 
+      error: error.message || 'Failed to send email via Resend API' 
+    }
+  }
+}
+
 // Helper function to send verification code email
-async function sendVerificationCodeEmail(code: string, email: string) {
-  // Log the email (in production, integrate with SendGrid/Resend/Mailgun)
-  console.log('=== VERIFICATION CODE EMAIL ===')
-  console.log('To:', email)
-  console.log('Subject: Security Code: Verify Password Change')
-  console.log('Body:')
-  console.log(`Your verification code is: ${code}`)
-  console.log('')
-  console.log('If this wasn\'t you, ignore this email.')
-  console.log('=== END EMAIL ===')
-  
-  // In production, integrate with an email API:
-  // Example with Resend:
-  // if (settingsData.smtpPassword) {
-  //   await fetch('https://api.resend.com/emails', {
-  //     method: 'POST',
-  //     headers: { 'Authorization': 'Bearer ' + settingsData.smtpPassword, 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({
-  //       from: 'noreply@hoteltermal.al',
-  //       to: email,
-  //       subject: 'Security Code: Verify Password Change',
-  //       text: `Your verification code is: ${code}\n\nIf this wasn't you, ignore this email.`
-  //     })
-  //   })
-  // }
-  
-  return true
+async function sendVerificationCodeEmail(code: string, email: string): Promise<{ success: boolean; error?: string }> {
+  const subject = 'Security Code: Verify Password Change'
+  const body = `Your verification code is: ${code}
+
+If this wasn't you, ignore this email.
+
+---
+Hotel Termal Peshkopi`
+
+  return await sendEmailViaResend(email, subject, body)
 }
 
 // Step 1: Request password change - generates and sends verification code
@@ -426,17 +470,33 @@ app.post('/api/auth/request-code', async (c) => {
   })
   
   // Send verification code via email
-  try {
-    await sendVerificationCodeEmail(code, settingsData.adminEmail)
-  } catch (err) {
-    console.error('Failed to send verification email:', err)
-    return c.json({ success: false, error: 'Failed to send verification email' }, 500)
+  const emailResult = await sendVerificationCodeEmail(code, settingsData.adminEmail)
+  
+  if (!emailResult.success) {
+    // Email failed but we still have the code - show it in development/testing
+    console.log('=== VERIFICATION CODE (Email failed) ===')
+    console.log('Code:', code)
+    console.log('Error:', emailResult.error)
+    console.log('==========================================')
+    
+    // Return the code in the response for development/testing
+    // In production, remove the 'code' field from response
+    return c.json({ 
+      status: 'verification_required',
+      verificationId,
+      message: `Verification code generated. ${emailResult.error || 'Check server logs for the code.'}`,
+      emailError: emailResult.error,
+      // WARNING: Remove this 'code' field in production!
+      code: code, // Only for development/testing
+      smtpConfigured: !!settingsData.smtpPassword
+    })
   }
   
   return c.json({ 
     status: 'verification_required',
     verificationId,
-    message: `Verification code sent to ${settingsData.adminEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')}`
+    message: `Verification code sent to ${settingsData.adminEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')}`,
+    smtpConfigured: true
   })
 })
 

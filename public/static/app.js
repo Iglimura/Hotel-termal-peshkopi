@@ -1139,7 +1139,7 @@ window.changeLang = (lang) => {
   renderApp();
 };
 
-// Availability form handler
+// Availability form handler with detailed room information
 document.addEventListener('submit', async (e) => {
   if (e.target.id !== 'availability-form') return;
   e.preventDefault();
@@ -1155,6 +1155,10 @@ document.addEventListener('submit', async (e) => {
     return;
   }
   
+  // Show loading state
+  resultDiv.innerHTML = `<p class="text-gray-600"><i class="fas fa-spinner fa-spin mr-2"></i>Duke kontrolluar disponueshmërinë...</p>`;
+  resultDiv.classList.remove('hidden');
+  
   try {
     const res = await fetch('/api/check-availability', {
       method: 'POST',
@@ -1164,10 +1168,24 @@ document.addEventListener('submit', async (e) => {
     const data = await res.json();
     
     if (data.available) {
+      // Build detailed room availability list
+      let roomsListHTML = data.rooms.map(room => {
+        const roomName = getLocalizedText(room.name);
+        const availableUnits = room.availableUnits;
+        const totalUnits = room.totalUnits;
+        const statusClass = availableUnits > 2 ? 'text-emerald-600' : 'text-amber-600';
+        return `<div class="flex justify-between items-center py-1">
+          <span class="text-sm text-gray-700">${roomName}</span>
+          <span class="text-sm font-medium ${statusClass}">${availableUnits}/${totalUnits} të lira</span>
+        </div>`;
+      }).join('');
+      
       resultDiv.innerHTML = `
         <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <p class="text-emerald-700 font-medium"><i class="fas fa-check-circle mr-2"></i>${t('hero.available')}</p>
-          <p class="text-sm text-emerald-600 mt-1">${data.count} dhoma të disponueshme</p>
+          <p class="text-emerald-700 font-medium mb-2"><i class="fas fa-check-circle mr-2"></i>${t('hero.available')}</p>
+          <div class="border-t border-emerald-200 pt-2 mt-2">
+            ${roomsListHTML}
+          </div>
           <a href="#rooms" class="inline-block mt-3 text-emerald-700 font-semibold hover:underline">
             <i class="fas fa-arrow-right mr-1"></i>Shiko dhomat
           </a>
@@ -1177,12 +1195,17 @@ document.addEventListener('submit', async (e) => {
       resultDiv.innerHTML = `
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <p class="text-red-700 font-medium"><i class="fas fa-times-circle mr-2"></i>${t('hero.notAvailable')}</p>
+          <p class="text-sm text-red-600 mt-1">Të gjitha dhomat janë të zëna për këto data.</p>
         </div>
       `;
     }
-    resultDiv.classList.remove('hidden');
   } catch (error) {
     console.error('Error checking availability:', error);
+    resultDiv.innerHTML = `
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p class="text-red-700 font-medium"><i class="fas fa-exclamation-triangle mr-2"></i>Gabim në kontrollimin e disponueshmërisë</p>
+      </div>
+    `;
   }
 });
 

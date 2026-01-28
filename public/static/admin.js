@@ -1079,14 +1079,18 @@ window.editRoom = (id) => {
           <label class="block text-sm font-medium text-gray-700 mb-1">Description (English)</label>
           <textarea name="descEn" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">${room.description.en}</textarea>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Price per Person (€)</label>
             <input type="number" name="pricePerPerson" value="${room.pricePerPerson}" min="1" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Capacity (persons)</label>
             <input type="number" name="capacity" value="${room.capacity}" min="1" max="10" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Sasia e Dhomave (Total)</label>
+            <input type="number" name="quantity" value="${room.quantity || 1}" min="1" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
           </div>
         </div>
         <div>
@@ -1159,6 +1163,7 @@ window.editRoom = (id) => {
       },
       pricePerPerson: parseInt(formData.get('pricePerPerson')),
       capacity: parseInt(formData.get('capacity')),
+      quantity: parseInt(formData.get('quantity')) || 1,
       amenities: formData.get('amenities').split(',').map(a => a.trim()).filter(a => a),
       images: tempRoomImages
     };
@@ -1862,21 +1867,34 @@ function renderSettings() {
   
   if (credentialsVerificationState === 'verify') {
     // State B: Verification code input
+    var devCodeHint = devVerificationCode 
+      ? '<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">' +
+          '<div class="flex items-start gap-2">' +
+            '<i class="fas fa-code text-yellow-600 mt-0.5"></i>' +
+            '<div class="text-sm text-yellow-800">' +
+              '<p class="font-medium">Development Mode</p>' +
+              '<p>Email not configured. Your code is: <strong class="font-mono text-lg">' + devVerificationCode + '</strong></p>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      : '';
+    
     credentialsSection = 
       '<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">' +
         '<div class="flex items-start gap-2">' +
           '<i class="fas fa-envelope-open-text text-emerald-600 mt-1 text-xl"></i>' +
           '<div class="text-sm text-emerald-800">' +
-            '<p class="font-medium text-base">Verification Code Sent!</p>' +
-            '<p>A 6-digit verification code has been sent to <strong>' + maskedEmail + '</strong>. Please check your email and enter the code below.</p>' +
+            '<p class="font-medium text-base">Verification Code Generated!</p>' +
+            '<p>' + maskedEmail + '</p>' +
             '<p class="text-xs mt-1 text-emerald-600">The code expires in 10 minutes.</p>' +
           '</div>' +
         '</div>' +
       '</div>' +
+      devCodeHint +
       '<div class="space-y-4">' +
         '<div><label class="block text-sm font-medium text-gray-700 mb-1">Verification Code *</label>' +
           '<input type="text" id="verificationCode" maxlength="6" placeholder="123456" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-center text-2xl font-mono tracking-widest" autocomplete="off">' +
-          '<p class="text-xs text-gray-500 mt-1">Enter the 6-digit code from your email</p></div>' +
+          '<p class="text-xs text-gray-500 mt-1">Enter the 6-digit code' + (devVerificationCode ? ' shown above' : ' from your email') + '</p></div>' +
         '<div class="flex gap-3">' +
           '<button onclick="cancelVerification()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"><i class="fas fa-arrow-left mr-1"></i>Back</button>' +
           '<button onclick="confirmVerification()" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-check mr-1"></i>Confirm</button>' +
@@ -1940,17 +1958,17 @@ function renderSettings() {
         '<div class="flex items-start gap-2">' +
           '<i class="fas fa-info-circle text-blue-600 mt-1"></i>' +
           '<div class="text-sm text-blue-800">' +
-            '<p class="font-medium">Gmail App Password Required</p>' +
-            '<p>To enable 2FA and email notifications, you need to generate an App Password from your Google Account settings. Go to Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.</p>' +
+            '<p class="font-medium">Resend API Key Required</p>' +
+            '<p>This app uses <a href="https://resend.com" target="_blank" class="underline font-medium">Resend</a> for email delivery (free tier: 100 emails/day). Get your API key from <a href="https://resend.com/api-keys" target="_blank" class="underline font-medium">resend.com/api-keys</a> (starts with "re_").</p>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div class="space-y-4">' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Admin Email (recipient for verification codes)</label>' +
           '<input type="email" id="settingAdminEmail" value="' + (settings.adminEmail || '') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Gmail App Password</label>' +
-          '<input type="password" id="settingSMTPPassword" placeholder="Enter new App Password to update" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
-          '<p class="text-xs text-gray-500 mt-1">SMTP Status: ' + smtpStatus + '</p></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Resend API Key</label>' +
+          '<input type="password" id="settingSMTPPassword" placeholder="re_xxxxxxxxxxxxxxxxxx" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
+          '<p class="text-xs text-gray-500 mt-1">Status: ' + smtpStatus + '</p></div>' +
         '<button onclick="saveEmailSettings()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-save mr-1"></i>Save Email Settings</button>' +
       '</div>' +
     '</div>' +
@@ -1997,6 +2015,9 @@ window.saveEmailSettings = async function() {
   renderAdmin();
 };
 
+// State to store dev code if email sending fails
+let devVerificationCode = null;
+
 // Step 1: Request verification code
 window.requestCredentialChange = async function() {
   var currentPassword = document.getElementById('currentPassword').value;
@@ -2035,7 +2056,23 @@ window.requestCredentialChange = async function() {
     if (data.status === 'verification_required') {
       // Switch to verification state
       pendingVerificationId = data.verificationId;
-      maskedEmail = data.message.replace('Verification code sent to ', '');
+      
+      // Store dev code if provided (for development/testing when email fails)
+      devVerificationCode = data.code || null;
+      
+      // Set masked email for display
+      if (data.smtpConfigured && !data.emailError) {
+        maskedEmail = data.message;
+      } else {
+        // Email not sent - show helpful message
+        maskedEmail = data.message + (data.emailError ? ' (' + data.emailError + ')' : '');
+        
+        // If dev code is provided, show it in an alert for testing
+        if (devVerificationCode) {
+          alert('Development Mode: Your verification code is: ' + devVerificationCode + '\n\nNote: Configure Gmail App Password in Settings to enable real email sending.');
+        }
+      }
+      
       credentialsVerificationState = 'verify';
       renderAdmin();
     } else {
@@ -2084,6 +2121,7 @@ window.cancelVerification = function() {
   credentialsVerificationState = 'input';
   pendingVerificationId = null;
   maskedEmail = '';
+  devVerificationCode = null;
   renderAdmin();
 };
 
