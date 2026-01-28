@@ -1,6 +1,10 @@
+// Force Node.js runtime for Nodemailer SMTP support
+export const runtime = 'nodejs'
+
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
 import { cors } from 'hono/cors'
+import nodemailer from 'nodemailer'
 
 // ============== SETTINGS DATA ==============
 let settingsData = {
@@ -361,14 +365,13 @@ app.put('/api/settings', async (c) => {
 
 // ============== 2FA PASSWORD CHANGE ENDPOINTS ==============
 
-// Helper function to send email via Resend API (works in Cloudflare Workers)
-// Since Gmail SMTP doesn't work in Cloudflare Workers, we use Resend's HTTP API
-// The smtpPassword field stores the Resend API key (e.g., re_xxxxxxxx)
-async function sendEmailViaResend(to: string, subject: string, body: string): Promise<{ success: boolean; error?: string }> {
-  const fromEmail = settingsData.adminEmail
-  const apiKey = settingsData.smtpPassword // Resend API key stored here
+// Helper function to send email via Gmail SMTP using Nodemailer
+// Reads credentials dynamically from settingsData (adminEmail + smtpPassword/App Password)
+async function sendEmailViaGmail(to: string, subject: string, body: string): Promise<{ success: boolean; error?: string }> {
+  const gmailUser = settingsData.adminEmail
+  const gmailAppPassword = settingsData.smtpPassword // Gmail App Password (16-char)
   
-  if (!fromEmail || !apiKey) {
+  if (!gmailUser || !gmailAppPassword) {
     console.log('=== EMAIL SENDING SKIPPED: Credentials not configured ===')
     console.log('To:', to)
     console.log('Subject:', subject)
@@ -376,48 +379,42 @@ async function sendEmailViaResend(to: string, subject: string, body: string): Pr
     console.log('===========================================')
     return { 
       success: false, 
-      error: 'Email credentials not configured. Please configure Resend API key in Settings > Email Settings.' 
+      error: 'Email credentials not configured. Please configure Gmail App Password in Settings > Email Settings.' 
     }
   }
   
   try {
-    console.log('=== SENDING EMAIL VIA RESEND API ===')
+    console.log('=== SENDING EMAIL VIA GMAIL SMTP (Nodemailer) ===')
+    console.log('From:', gmailUser)
     console.log('To:', to)
     console.log('Subject:', subject)
     
-    // Send email via Resend API
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        // Use Resend's default domain for testing, or your own verified domain
-        from: `Hotel Termal Peshkopi <onboarding@resend.dev>`,
-        to: [to],
-        subject: subject,
-        text: body,
-        reply_to: fromEmail
-      })
+    // Create transporter with Gmail SMTP settings
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailAppPassword
+      }
     })
     
-    const result = await response.json()
-    
-    if (!response.ok) {
-      console.error('Resend API error:', result)
-      throw new Error(result.message || result.error || `HTTP ${response.status}`)
-    }
+    // Send email
+    const info = await transporter.sendMail({
+      from: `Hotel Termal Peshkopi <${gmailUser}>`,
+      to: to,
+      subject: subject,
+      text: body
+    })
     
     console.log('=== EMAIL SENT SUCCESSFULLY ===')
-    console.log('Email ID:', result.id)
+    console.log('Message ID:', info.messageId)
     
     return { success: true }
   } catch (error: any) {
     console.error('Email sending failed:', error)
     return { 
       success: false, 
-      error: error.message || 'Failed to send email via Resend API' 
+      error: error.message || 'Failed to send email via Gmail SMTP' 
     }
   }
 }
@@ -432,7 +429,7 @@ If this wasn't you, ignore this email.
 ---
 Hotel Termal Peshkopi`
 
-  return await sendEmailViaResend(email, subject, body)
+  return await sendEmailViaGmail(email, subject, body)
 }
 
 // Step 1: Request password change - generates and sends verification code

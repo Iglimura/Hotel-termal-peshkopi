@@ -117,8 +117,9 @@ function renderSidebar() {
   ];
   
   return `
-    <aside class="w-64 bg-emerald-800 text-white flex-shrink-0">
-      <div class="p-6">
+    <aside class="w-64 bg-emerald-800 text-white flex-shrink-0 h-screen flex flex-col">
+      <!-- Top Section: Logo + Navigation (scrollable) -->
+      <div class="flex-1 overflow-y-auto p-6">
         <div class="flex items-center gap-3 mb-8">
           <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
             <i class="fas fa-hotel"></i>
@@ -129,7 +130,7 @@ function renderSidebar() {
           </div>
         </div>
         
-        <nav class="space-y-2">
+        <nav class="space-y-3 mb-6">
           ${menuItems.map(item => `
             <button 
               onclick="setView('${item.id}')"
@@ -141,7 +142,8 @@ function renderSidebar() {
         </nav>
       </div>
       
-      <div class="absolute bottom-0 w-64 p-6 border-t border-emerald-700">
+      <!-- Bottom Section: Actions (fixed at bottom via flexbox) -->
+      <div class="p-6 border-t border-emerald-700 bg-emerald-800">
         <a href="/" class="flex items-center gap-2 text-emerald-200 hover:text-white transition text-sm">
           <i class="fas fa-external-link-alt"></i>
           View Website
@@ -1908,7 +1910,8 @@ function renderSettings() {
           '<i class="fas fa-shield-alt text-amber-600 mt-1"></i>' +
           '<div class="text-sm text-amber-800">' +
             '<p class="font-medium">2-Factor Authentication Required</p>' +
-            '<p>For security, a verification code will be sent to <strong>' + (settings.adminEmail || 'your admin email') + '</strong> before password changes are applied. Make sure your admin email is correctly configured.</p>' +
+            '<p>For security, a verification code will be sent via Gmail to <strong>' + (settings.adminEmail || 'your admin email') + '</strong>. ' +
+            (settings.smtpConfigured ? '' : '<span class="text-red-600 font-medium">⚠️ Gmail App Password not configured!</span>') + '</p>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1953,22 +1956,29 @@ function renderSettings() {
 
     // Email Notification Settings Card
     '<div class="bg-white rounded-xl shadow-sm p-6">' +
-      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-envelope text-emerald-600"></i>Email Notifications</h4>' +
+      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-envelope text-emerald-600"></i>Email Notifications (Gmail SMTP)</h4>' +
       '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">' +
         '<div class="flex items-start gap-2">' +
           '<i class="fas fa-info-circle text-blue-600 mt-1"></i>' +
           '<div class="text-sm text-blue-800">' +
-            '<p class="font-medium">Resend API Key Required</p>' +
-            '<p>This app uses <a href="https://resend.com" target="_blank" class="underline font-medium">Resend</a> for email delivery (free tier: 100 emails/day). Get your API key from <a href="https://resend.com/api-keys" target="_blank" class="underline font-medium">resend.com/api-keys</a> (starts with "re_").</p>' +
+            '<p class="font-medium">Gmail App Password Required</p>' +
+            '<p>To enable email notifications, you need a Gmail App Password:</p>' +
+            '<ol class="list-decimal list-inside mt-1 space-y-1">' +
+              '<li>Go to <a href="https://myaccount.google.com/security" target="_blank" class="underline font-medium">Google Account Security</a></li>' +
+              '<li>Enable 2-Step Verification if not already</li>' +
+              '<li>Go to App Passwords (search "App Passwords")</li>' +
+              '<li>Create a new app password for "Mail"</li>' +
+              '<li>Copy the 16-character password here</li>' +
+            '</ol>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div class="space-y-4">' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Admin Email (recipient for verification codes)</label>' +
-          '<input type="email" id="settingAdminEmail" value="' + (settings.adminEmail || '') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Resend API Key</label>' +
-          '<input type="password" id="settingSMTPPassword" placeholder="re_xxxxxxxxxxxxxxxxxx" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
-          '<p class="text-xs text-gray-500 mt-1">Status: ' + smtpStatus + '</p></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Admin Email (Gmail address)</label>' +
+          '<input type="email" id="settingAdminEmail" value="' + (settings.adminEmail || '') + '" placeholder="your-email@gmail.com" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Gmail App Password</label>' +
+          '<input type="password" id="settingSMTPPassword" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
+          '<p class="text-xs text-gray-500 mt-1">Status: ' + smtpStatus + ' (16-character app password, spaces optional)</p></div>' +
         '<button onclick="saveEmailSettings()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-save mr-1"></i>Save Email Settings</button>' +
       '</div>' +
     '</div>' +
