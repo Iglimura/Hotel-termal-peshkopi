@@ -7,6 +7,7 @@ const translations = {
       wellness: 'Wellness',
       physiotherapy: 'Fizioterapi',
       gastronomy: 'Kuzhina',
+      artikuj: 'Artikuj',
       reviews: 'Vlerësime',
       contact: 'Kontakt',
       book: 'Rezervo'
@@ -66,6 +67,7 @@ const translations = {
       wellness: 'Wellness',
       physiotherapy: 'Physiotherapy',
       gastronomy: 'Cuisine',
+      artikuj: 'Articles',
       reviews: 'Reviews',
       contact: 'Contact',
       book: 'Book Now'
@@ -125,6 +127,7 @@ const translations = {
       wellness: 'Wellness',
       physiotherapy: 'Physiotherapie',
       gastronomy: 'Küche',
+      artikuj: 'Artikel',
       reviews: 'Bewertungen',
       contact: 'Kontakt',
       book: 'Buchen'
@@ -184,6 +187,7 @@ const translations = {
       wellness: 'Wellness',
       physiotherapy: 'Fisioterapia',
       gastronomy: 'Cucina',
+      artikuj: 'Articoli',
       reviews: 'Recensioni',
       contact: 'Contatto',
       book: 'Prenota'
@@ -243,6 +247,7 @@ const translations = {
       wellness: 'Bien-être',
       physiotherapy: 'Physiothérapie',
       gastronomy: 'Cuisine',
+      artikuj: 'Articles',
       reviews: 'Avis',
       contact: 'Contact',
       book: 'Réserver'
@@ -462,7 +467,7 @@ function renderApp() {
     ${renderNavigation()}
     ${renderHero()}
     ${renderRooms()}
-    ${renderNews()}
+    ${renderArtikuj()}
     ${renderWellness()}
     ${renderPhysiotherapy()}
     ${renderGastronomy()}
@@ -479,6 +484,7 @@ function renderApp() {
     createCarousel(content.wellness?.images || [], 'wellness-carousel');
     createCarousel(content.gastronomy?.images || [], 'gastro-carousel');
     createReviewsCarousel();
+    initArtikujCarousel(); // Initialize artikuj carousel dots
     startAutoSlide('wellness-carousel');
     startAutoSlide('gastro-carousel');
   }, 100);
@@ -520,6 +526,7 @@ function renderNavigation() {
             <a href="#wellness" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.wellness')}</a>
             <a href="#physio" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.physiotherapy')}</a>
             <a href="#gastro" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.gastronomy')}</a>
+            <a href="#artikuj" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.artikuj')}</a>
             <a href="#reviews" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.reviews')}</a>
             <a href="#contact" class="text-gray-700 hover:text-emerald-600 transition text-sm font-medium">${t('nav.contact')}</a>
           </div>
@@ -560,6 +567,9 @@ function renderMobileMenu() {
             </a>
             <a href="#gastro" onclick="toggleMenu()" class="block py-3 px-4 rounded-lg hover:bg-emerald-50 text-gray-700 font-medium transition">
               <i class="fas fa-utensils mr-3 text-emerald-600"></i>${t('nav.gastronomy')}
+            </a>
+            <a href="#artikuj" onclick="toggleMenu()" class="block py-3 px-4 rounded-lg hover:bg-emerald-50 text-gray-700 font-medium transition">
+              <i class="fas fa-newspaper mr-3 text-emerald-600"></i>${t('nav.artikuj')}
             </a>
             <a href="#reviews" onclick="toggleMenu()" class="block py-3 px-4 rounded-lg hover:bg-emerald-50 text-gray-700 font-medium transition">
               <i class="fas fa-star mr-3 text-emerald-600"></i>${t('nav.reviews')}
@@ -681,76 +691,130 @@ function renderRooms() {
   `;
 }
 
-// ============== NEWS/BLOG SECTION ==============
-function renderNews() {
-  // Only show latest 3 posts
-  const latestPosts = posts.slice(0, 3);
-  
-  if (latestPosts.length === 0) {
+// ============== ARTIKUJ (BLOG) SECTION - CAROUSEL ==============
+function renderArtikuj() {
+  if (posts.length === 0) {
     return ''; // Don't render section if no posts
   }
   
-  const newsTranslations = {
-    al: { title: 'Të Rejat', subtitle: 'Lajmet dhe artikujt më të fundit', readMore: 'Lexo Më Shumë', viewAll: 'Shiko të gjitha' },
-    en: { title: 'News', subtitle: 'Latest news and articles', readMore: 'Read More', viewAll: 'View All' },
-    de: { title: 'Neuigkeiten', subtitle: 'Neueste Nachrichten und Artikel', readMore: 'Mehr lesen', viewAll: 'Alle anzeigen' },
-    it: { title: 'Novità', subtitle: 'Ultime notizie e articoli', readMore: 'Leggi di più', viewAll: 'Vedi tutti' },
-    fr: { title: 'Actualités', subtitle: 'Dernières nouvelles et articles', readMore: 'Lire la suite', viewAll: 'Voir tout' }
+  const artikujTranslations = {
+    al: { title: 'Artikuj', subtitle: 'Lajmet dhe artikujt më të fundit', readMore: 'Lexo Më Shumë', viewAll: 'Shiko të gjitha' },
+    en: { title: 'Articles', subtitle: 'Latest news and articles', readMore: 'Read More', viewAll: 'View All' },
+    de: { title: 'Artikel', subtitle: 'Neueste Nachrichten und Artikel', readMore: 'Mehr lesen', viewAll: 'Alle anzeigen' },
+    it: { title: 'Articoli', subtitle: 'Ultime notizie e articoli', readMore: 'Leggi di più', viewAll: 'Vedi tutti' },
+    fr: { title: 'Articles', subtitle: 'Dernières nouvelles et articles', readMore: 'Lire la suite', viewAll: 'Voir tout' }
   };
   
-  const newsT = newsTranslations[currentLang] || newsTranslations.al;
+  const artikujT = artikujTranslations[currentLang] || artikujTranslations.al;
   
   return `
-    <section id="news" class="py-20 bg-white">
+    <section id="artikuj" class="py-20 bg-white">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
           <div class="text-center md:text-left">
-            <h2 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-4">${newsT.title}</h2>
-            <p class="text-gray-600 text-lg">${newsT.subtitle}</p>
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-4">${artikujT.title}</h2>
+            <p class="text-gray-600 text-lg">${artikujT.subtitle}</p>
             <div class="w-24 h-1 bg-emerald-500 mt-4 rounded-full mx-auto md:mx-0"></div>
           </div>
           <a href="/blog" class="mt-6 md:mt-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-lg hover:shadow-xl mx-auto md:mx-0">
-            ${newsT.viewAll}
+            ${artikujT.viewAll}
             <i class="fas fa-arrow-right"></i>
           </a>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          ${latestPosts.map(post => {
-            const hasImage = post.image && post.image.trim() !== '';
-            return `
-              <article class="bg-beige-50 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow group">
-                ${hasImage ? `
-                  <a href="/blog/${post.slug}" class="block overflow-hidden">
-                    <img src="${post.image}" alt="${getLocalizedText(post.title)}" 
-                         class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                         onerror="this.style.display='none'">
-                  </a>
-                ` : `
-                  <div class="h-4 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
-                `}
-                <div class="p-6">
-                  <div class="flex items-center gap-2 text-sm text-emerald-600 mb-3">
-                    <i class="far fa-calendar-alt"></i>
-                    <time datetime="${post.date}">${new Date(post.date).toLocaleDateString(currentLang === 'al' ? 'sq-AL' : currentLang, { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+        <!-- Carousel Container -->
+        <div class="relative">
+          <!-- Navigation Arrows -->
+          <button onclick="scrollArtikujCarousel(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition hidden md:flex">
+            <i class="fas fa-chevron-left text-xl"></i>
+          </button>
+          <button onclick="scrollArtikujCarousel(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition hidden md:flex">
+            <i class="fas fa-chevron-right text-xl"></i>
+          </button>
+          
+          <!-- Carousel Track -->
+          <div id="artikuj-carousel" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 -mx-4 px-4 md:mx-0 md:px-0" style="scrollbar-width: none; -ms-overflow-style: none;">
+            ${posts.map(post => {
+              const hasImage = post.image && post.image.trim() !== '';
+              return `
+                <article class="flex-shrink-0 w-[85%] md:w-[calc(33.333%-1rem)] snap-start bg-beige-50 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                  ${hasImage ? `
+                    <a href="/blog/${post.slug}" class="block overflow-hidden">
+                      <img src="${post.image}" alt="${getLocalizedText(post.title)}" 
+                           class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                           onerror="this.parentElement.innerHTML='<div class=\\'h-4 bg-gradient-to-r from-emerald-500 to-emerald-600\\'></div>'">
+                    </a>
+                  ` : `
+                    <div class="h-4 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+                  `}
+                  <div class="p-6">
+                    <div class="flex items-center gap-2 text-sm text-emerald-600 mb-3">
+                      <i class="far fa-calendar-alt"></i>
+                      <time datetime="${post.date}">${new Date(post.date).toLocaleDateString(currentLang === 'al' ? 'sq-AL' : currentLang, { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                    </div>
+                    <h3 class="font-serif font-bold text-xl text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                      <a href="/blog/${post.slug}">${getLocalizedText(post.title)}</a>
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">${getLocalizedText(post.excerpt)}</p>
+                    <a href="/blog/${post.slug}" 
+                       class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium text-sm transition">
+                      ${artikujT.readMore}
+                      <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
                   </div>
-                  <h3 class="font-serif font-bold text-xl text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors">
-                    <a href="/blog/${post.slug}">${getLocalizedText(post.title)}</a>
-                  </h3>
-                  <p class="text-gray-600 text-sm mb-4 line-clamp-3">${getLocalizedText(post.excerpt)}</p>
-                  <a href="/blog/${post.slug}" 
-                     class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium text-sm transition">
-                    ${newsT.readMore}
-                    <i class="fas fa-arrow-right text-xs"></i>
-                  </a>
-                </div>
-              </article>
-            `;
-          }).join('')}
+                </article>
+              `;
+            }).join('')}
+          </div>
+          
+          <!-- Carousel Dots (Mobile) -->
+          <div class="flex justify-center gap-2 mt-4 md:hidden">
+            ${posts.map((_, i) => `
+              <button onclick="scrollToArtikujSlide(${i})" class="w-2 h-2 rounded-full bg-emerald-300 hover:bg-emerald-500 transition artikuj-dot" data-index="${i}"></button>
+            `).join('')}
+          </div>
         </div>
       </div>
     </section>
   `;
+}
+
+// Artikuj Carousel scroll functions
+window.scrollArtikujCarousel = (direction) => {
+  const carousel = document.getElementById('artikuj-carousel');
+  if (!carousel) return;
+  const cardWidth = carousel.querySelector('article')?.offsetWidth || 300;
+  carousel.scrollBy({ left: direction * (cardWidth + 24), behavior: 'smooth' });
+};
+
+window.scrollToArtikujSlide = (index) => {
+  const carousel = document.getElementById('artikuj-carousel');
+  if (!carousel) return;
+  const cards = carousel.querySelectorAll('article');
+  if (cards[index]) {
+    cards[index].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+  }
+};
+
+// Update dots on scroll
+function initArtikujCarousel() {
+  const carousel = document.getElementById('artikuj-carousel');
+  if (!carousel) return;
+  
+  carousel.addEventListener('scroll', () => {
+    const cards = carousel.querySelectorAll('article');
+    const dots = document.querySelectorAll('.artikuj-dot');
+    if (cards.length === 0 || dots.length === 0) return;
+    
+    const scrollLeft = carousel.scrollLeft;
+    const cardWidth = cards[0].offsetWidth + 24;
+    const activeIndex = Math.round(scrollLeft / cardWidth);
+    
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('bg-emerald-600', i === activeIndex);
+      dot.classList.toggle('bg-emerald-300', i !== activeIndex);
+    });
+  });
 }
 
 function renderWellness() {
