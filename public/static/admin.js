@@ -1457,8 +1457,12 @@ function renderFinance() {
   const profitBg = financeStats.netProfit >= 0 ? 'bg-emerald-100' : 'bg-red-100';
   const profitText = financeStats.netProfit >= 0 ? 'Fitim' : 'Humbje';
   
-  // Year selector options
-  const yearOptions = ['2025', '2026', '2027'].map(y => 
+  // Year selector options (2024-2035 for future-proofing)
+  const years = [];
+  for (let y = 2024; y <= 2035; y++) {
+    years.push(y.toString());
+  }
+  const yearOptions = years.map(y => 
     '<option value="' + y + '"' + (selectedYear === y ? ' selected' : '') + '>' + y + '</option>'
   ).join('');
   

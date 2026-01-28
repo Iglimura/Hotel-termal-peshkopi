@@ -690,10 +690,16 @@ function renderNews() {
   return `
     <section id="news" class="py-20 bg-white">
       <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-4">${newsT.title}</h2>
-          <p class="text-gray-600 text-lg">${newsT.subtitle}</p>
-          <div class="w-24 h-1 bg-emerald-500 mx-auto mt-4 rounded-full"></div>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
+          <div class="text-center md:text-left">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-emerald-800 mb-4">${newsT.title}</h2>
+            <p class="text-gray-600 text-lg">${newsT.subtitle}</p>
+            <div class="w-24 h-1 bg-emerald-500 mt-4 rounded-full mx-auto md:mx-0"></div>
+          </div>
+          <a href="/blog" class="mt-6 md:mt-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-lg hover:shadow-xl mx-auto md:mx-0">
+            ${newsT.viewAll}
+            <i class="fas fa-arrow-right"></i>
+          </a>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -960,7 +966,17 @@ function renderContact() {
               </div>
               <div>
                 <h3 class="font-semibold text-gray-800 text-lg">${t('contact.phone')}</h3>
-                <a href="tel:+355684340580" class="text-emerald-600 hover:underline text-lg font-medium">+355 68 434 0580</a>
+                <div class="space-y-1">
+                  <a href="tel:+355684340580" class="text-emerald-600 hover:underline text-lg font-medium block">+355 68 434 0580</a>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Rezervë</span>
+                    <a href="tel:+355672020218" class="text-emerald-600 hover:underline text-sm">+355 67 202 0218</a>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Rezervë</span>
+                    <a href="tel:+355682321806" class="text-emerald-600 hover:underline text-sm">+355 68 232 1806</a>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1030,7 +1046,11 @@ function renderFooter() {
           <div>
             <h4 class="font-semibold text-lg mb-4">${t('contact.title')}</h4>
             <div class="space-y-3 text-emerald-200">
-              <p><i class="fas fa-phone mr-2"></i>+355 68 434 0580</p>
+              <div>
+                <p><i class="fas fa-phone mr-2"></i>+355 68 434 0580</p>
+                <p class="text-sm mt-1 text-emerald-300 pl-6"><span class="text-xs bg-emerald-700 px-1.5 py-0.5 rounded mr-1">Rezervë</span>+355 67 202 0218</p>
+                <p class="text-sm mt-1 text-emerald-300 pl-6"><span class="text-xs bg-emerald-700 px-1.5 py-0.5 rounded mr-1">Rezervë</span>+355 68 232 1806</p>
+              </div>
               <p><i class="fas fa-envelope mr-2"></i>hotel.termal.peshkopi@gmail.com</p>
               <p><i class="fas fa-map-marker-alt mr-2"></i>${t('contact.addressText')}</p>
             </div>

@@ -771,6 +771,138 @@ const getLoginHTML = () => `<!DOCTYPE html>
 </body>
 </html>`
 
+// Blog archive page HTML (all posts)
+const getBlogArchiveHTML = (posts: any[]) => `<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog - Hotel Termal Peshkopi</title>
+  <meta name="description" content="Lexoni artikujt më të fundit për ujërat termale, kuzhinën tradicionale dhe aktivitetet në Peshkopi.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+            beige: { 50: '#fdfbf7', 100: '#f5f0e6' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Merriweather', 'serif'] }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { font-family: 'Merriweather', serif; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="bg-beige-50 text-gray-800">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 text-emerald-700 hover:text-emerald-800">
+        <i class="fas fa-arrow-left"></i>
+        <span class="font-medium">Kthehu në Kryefaqje</span>
+      </a>
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-spa text-white"></i>
+        </div>
+        <span class="font-serif font-bold text-emerald-800 hidden md:block">Hotel Termal</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-serif font-bold mb-4">Blog & Lajme</h1>
+      <p class="text-emerald-100 text-lg max-w-2xl mx-auto">Zbuloni artikujt më të fundit për ujërat termale, kuzhinën tradicionale dhe aktivitetet në Peshkopi.</p>
+    </div>
+  </section>
+
+  <!-- Blog Posts Grid -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        ${posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(post => {
+          const hasImage = post.image && post.image.trim() !== '';
+          return `
+            <article class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow group">
+              ${hasImage ? `
+                <a href="/blog/${post.slug}" class="block overflow-hidden">
+                  <img src="${post.image}" alt="${post.title?.al || ''}" 
+                       class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                       onerror="this.style.display='none'">
+                </a>
+              ` : `
+                <div class="h-4 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+              `}
+              <div class="p-6">
+                <div class="flex items-center gap-2 text-sm text-emerald-600 mb-3">
+                  <i class="far fa-calendar-alt"></i>
+                  <time datetime="${post.date}">${new Date(post.date).toLocaleDateString('sq-AL', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                </div>
+                <h2 class="font-serif font-bold text-xl text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors">
+                  <a href="/blog/${post.slug}">${post.title?.al || ''}</a>
+                </h2>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-3">${post.excerpt?.al || ''}</p>
+                <a href="/blog/${post.slug}" 
+                   class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium text-sm transition">
+                  Lexo Më Shumë
+                  <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+      
+      ${posts.length === 0 ? `
+        <div class="text-center py-16">
+          <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl font-semibold text-gray-600 mb-2">Nuk ka artikuj ende</h3>
+          <p class="text-gray-500">Artikujt e rinj do të shfaqen këtu.</p>
+        </div>
+      ` : ''}
+    </div>
+  </section>
+
+  <!-- Contact CTA -->
+  <section class="bg-emerald-700 text-white py-12">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-2xl font-serif font-bold mb-4">Na kontaktoni për më shumë informacion</h2>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="https://wa.me/355684340580" target="_blank" class="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition">
+          <i class="fab fa-whatsapp text-xl"></i>
+          WhatsApp
+        </a>
+        <a href="tel:+355684340580" class="inline-flex items-center gap-2 bg-white text-emerald-700 px-6 py-3 rounded-lg hover:bg-gray-100 transition">
+          <i class="fas fa-phone"></i>
+          +355 68 434 0580
+        </a>
+      </div>
+      <div class="mt-4 text-emerald-200 text-sm">
+        <span class="mr-4"><i class="fas fa-phone-alt mr-1"></i> Rezervë: +355 67 202 0218</span>
+        <span><i class="fas fa-phone-alt mr-1"></i> Rezervë: +355 68 232 1806</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-emerald-900 text-white py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <p class="text-emerald-200">&copy; ${new Date().getFullYear()} Hotel Termal Peshkopi. Të gjitha të drejtat e rezervuara.</p>
+    </div>
+  </footer>
+</body>
+</html>`
+
 // Blog post page HTML
 const getBlogPostHTML = (post: any) => `<!DOCTYPE html>
 <html lang="sq">
@@ -877,6 +1009,11 @@ app.get('/login', (c) => {
 
 app.get('/admin', (c) => {
   return c.html(getAdminHTML())
+})
+
+// Blog archive page (all posts)
+app.get('/blog', (c) => {
+  return c.html(getBlogArchiveHTML(postsData))
 })
 
 // Blog single post page
