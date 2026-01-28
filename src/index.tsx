@@ -2,6 +2,26 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
 import { cors } from 'hono/cors'
 
+// ============== SETTINGS DATA ==============
+let settingsData = {
+  hotelName: 'Hotel Termal Peshkopi',
+  logoUrl: '', // Empty means use default icon
+  adminEmail: 'hotel.termal.peshkopi@gmail.com',
+  smtpPassword: '', // Gmail App Password (encrypted in production)
+  adminUser: 'admin',
+  adminPassHash: 'peshkopi2026' // In production, this would be hashed
+}
+
+// ============== PHYSIOTHERAPY SERVICES DATA ==============
+let physioData: any[] = [
+  { id: '1', title: { al: 'Masazh terapeutik', en: 'Therapeutic massage', de: 'Therapeutische Massage', it: 'Massaggio terapeutico', fr: 'Massage thérapeutique' }, description: { al: 'Masazh i specializuar për lehtësimin e dhimbjeve muskulore dhe stresit.', en: 'Specialized massage for relieving muscle pain and stress.', de: 'Spezialisierte Massage zur Linderung von Muskelschmerzen und Stress.', it: 'Massaggio specializzato per alleviare dolori muscolari e stress.', fr: 'Massage spécialisé pour soulager les douleurs musculaires et le stress.' }, icon: 'fa-hand-sparkles', price: 30 },
+  { id: '2', title: { al: 'Hidroterapi', en: 'Hydrotherapy', de: 'Hydrotherapie', it: 'Idroterapia', fr: 'Hydrothérapie' }, description: { al: 'Trajtim me ujë termal për rehabilitim dhe relaksim.', en: 'Thermal water treatment for rehabilitation and relaxation.', de: 'Thermalwasserbehandlung zur Rehabilitation und Entspannung.', it: 'Trattamento con acque termali per riabilitazione e relax.', fr: 'Traitement thermal pour la rééducation et la relaxation.' }, icon: 'fa-water', price: 25 },
+  { id: '3', title: { al: 'Elektroterapi', en: 'Electrotherapy', de: 'Elektrotherapie', it: 'Elettroterapia', fr: 'Électrothérapie' }, description: { al: 'Trajtim me rrymë elektrike të butë për dhimbjet kronike.', en: 'Gentle electrical current treatment for chronic pain.', de: 'Sanfte elektrische Strombehandlung bei chronischen Schmerzen.', it: 'Trattamento con corrente elettrica delicata per dolori cronici.', fr: 'Traitement par courant électrique doux pour les douleurs chroniques.' }, icon: 'fa-bolt', price: 35 },
+  { id: '4', title: { al: 'Terapi me ultrazë', en: 'Ultrasound therapy', de: 'Ultraschalltherapie', it: 'Terapia ad ultrasuoni', fr: 'Thérapie par ultrasons' }, description: { al: 'Terapi me valë ultrazë për inflamacionet dhe dëmtimet e indeve.', en: 'Ultrasound wave therapy for inflammation and tissue damage.', de: 'Ultraschallwellentherapie bei Entzündungen und Gewebeschäden.', it: 'Terapia con onde ultrasoniche per infiammazioni e danni ai tessuti.', fr: 'Thérapie par ultrasons pour les inflammations et les lésions tissulaires.' }, icon: 'fa-wave-square', price: 40 },
+  { id: '5', title: { al: 'Rehabilitim post-operativ', en: 'Post-operative rehabilitation', de: 'Postoperative Rehabilitation', it: 'Riabilitazione post-operatoria', fr: 'Rééducation post-opératoire' }, description: { al: 'Program i personalizuar për rikuperimin pas operacioneve.', en: 'Personalized program for recovery after surgeries.', de: 'Personalisiertes Programm zur Genesung nach Operationen.', it: 'Programma personalizzato per il recupero post-operatorio.', fr: 'Programme personnalisé de récupération après chirurgie.' }, icon: 'fa-heartbeat', price: 50 },
+  { id: '6', title: { al: 'Terapi për dhimbjet e shpinës', en: 'Back pain therapy', de: 'Rückenschmerztherapie', it: 'Terapia per il mal di schiena', fr: 'Thérapie pour les douleurs dorsales' }, description: { al: 'Trajtim i specializuar për problemet e shpinës dhe disqeve.', en: 'Specialized treatment for spine and disc problems.', de: 'Spezialisierte Behandlung bei Wirbelsäulen- und Bandscheibenproblemen.', it: 'Trattamento specializzato per problemi alla colonna vertebrale e ai dischi.', fr: 'Traitement spécialisé pour les problèmes de colonne vertébrale et de disques.' }, icon: 'fa-user-injured', price: 45 }
+]
+
 // In-memory data store (simulating database)
 let bookingsData: any[] = [
   { id: '1', roomId: '1', guestName: 'Arben Hoxha', checkIn: '2026-01-28', checkOut: '2026-01-30', guests: 2, phone: '+355691234567', status: 'confirmed', totalPrice: 80, createdAt: '2026-01-20' },
@@ -9,6 +29,7 @@ let bookingsData: any[] = [
   { id: '3', roomId: '3', guestName: 'Giovanni Rossi', checkIn: '2026-02-10', checkOut: '2026-02-14', guests: 4, phone: '+393312345678', status: 'pending', totalPrice: 280, createdAt: '2026-01-23' },
 ]
 
+// Rooms now include quantity field for inventory management
 let roomsData = [
   {
     id: '1',
@@ -16,6 +37,7 @@ let roomsData = [
     description: { al: 'Dhomë komode me pamje në male, me krevat dopio dhe banjë private.', en: 'Comfortable room with mountain view, double bed and private bathroom.', de: 'Komfortables Zimmer mit Bergblick, Doppelbett und eigenem Bad.', it: 'Camera confortevole con vista montagna, letto matrimoniale e bagno privato.', fr: 'Chambre confortable avec vue montagne, lit double et salle de bain privée.' },
     pricePerPerson: 40,
     capacity: 2,
+    quantity: 5, // Total number of this room type
     amenities: ['wifi', 'tv', 'heating', 'bathroom', 'mountain-view'],
     images: [
       'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800',
@@ -29,6 +51,7 @@ let roomsData = [
     description: { al: 'Dhomë e gjerë ideale për familje, me dy krevata dhe hapësirë të bollshme.', en: 'Spacious room ideal for families, with two beds and plenty of space.', de: 'Geräumiges Zimmer ideal für Familien, mit zwei Betten und viel Platz.', it: 'Camera spaziosa ideale per famiglie, con due letti e tanto spazio.', fr: 'Chambre spacieuse idéale pour les familles, avec deux lits et beaucoup d\'espace.' },
     pricePerPerson: 35,
     capacity: 4,
+    quantity: 3, // Total number of this room type
     amenities: ['wifi', 'tv', 'heating', 'bathroom', 'balcony', 'mountain-view'],
     images: [
       'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800',
@@ -42,6 +65,7 @@ let roomsData = [
     description: { al: 'Suite luksoze me dhomë ndenje të veçantë, balkon panoramik dhe shërbim premium.', en: 'Luxurious suite with separate living area, panoramic balcony and premium service.', de: 'Luxuriöse Suite mit separatem Wohnbereich, Panoramabalkon und Premium-Service.', it: 'Suite lussuosa con zona living separata, balcone panoramico e servizio premium.', fr: 'Suite luxueuse avec coin salon séparé, balcon panoramique et service premium.' },
     pricePerPerson: 60,
     capacity: 2,
+    quantity: 2, // Total number of this room type
     amenities: ['wifi', 'tv', 'heating', 'bathroom', 'balcony', 'mountain-view', 'minibar', 'safe'],
     images: [
       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
@@ -55,6 +79,7 @@ let roomsData = [
     description: { al: 'Dhomë e thjeshtë dhe e pastër, ideale për udhëtarët me buxhet.', en: 'Simple and clean room, ideal for budget travelers.', de: 'Einfaches und sauberes Zimmer, ideal für preisbewusste Reisende.', it: 'Camera semplice e pulita, ideale per viaggiatori economici.', fr: 'Chambre simple et propre, idéale pour les voyageurs à petit budget.' },
     pricePerPerson: 25,
     capacity: 2,
+    quantity: 8, // Total number of this room type
     amenities: ['wifi', 'heating', 'bathroom'],
     images: [
       'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=800',
@@ -179,12 +204,76 @@ const expenseCategories = [
   'Shpenzime Shtetërore'
 ]
 
-// Admin credentials
-const ADMIN_USER = 'admin'
-const ADMIN_PASS = 'peshkopi2026'
+// Admin credentials are now dynamic from settingsData
+// ADMIN_USER and ADMIN_PASS read from settingsData.adminUser and settingsData.adminPassHash
 
 // Session store (in production, use KV or D1)
 let sessions: { [key: string]: { user: string; expires: number } } = {}
+
+// ============== HELPER FUNCTIONS ==============
+// Count bookings for a specific room type on given dates
+function countBookingsForRoom(roomId: string, checkIn: string, checkOut: string): number {
+  const checkInDate = new Date(checkIn)
+  const checkOutDate = new Date(checkOut)
+  
+  return bookingsData.filter(booking => {
+    if (booking.roomId !== roomId || booking.status === 'cancelled') return false
+    const bookingStart = new Date(booking.checkIn)
+    const bookingEnd = new Date(booking.checkOut)
+    // Check if date ranges overlap
+    return (checkInDate < bookingEnd && checkOutDate > bookingStart)
+  }).length
+}
+
+// Simple email sending function (works with Cloudflare Workers)
+async function sendEmailNotification(booking: any, room: any) {
+  // Only send if SMTP password is configured
+  if (!settingsData.smtpPassword || !settingsData.adminEmail) {
+    console.log('Email notification skipped: SMTP not configured')
+    return
+  }
+  
+  // For Cloudflare Workers, we would use a service like SendGrid, Mailgun, or Resend
+  // Since native Nodemailer doesn't work in Workers, we log the notification intent
+  // In production, integrate with an email API service
+  
+  const emailBody = `
+New Reservation Alert!
+
+Guest Name: ${booking.guestName}
+Room: ${room?.name?.en || 'Unknown Room'}
+Check-in: ${booking.checkIn}
+Check-out: ${booking.checkOut}
+Guests: ${booking.guests}
+Phone: ${booking.phone}
+Total Price: €${booking.totalPrice}
+Status: ${booking.status}
+
+---
+Hotel Termal Peshkopi
+  `.trim()
+  
+  console.log('=== EMAIL NOTIFICATION ===')
+  console.log('To:', settingsData.adminEmail)
+  console.log('Subject: New Reservation - ' + booking.guestName)
+  console.log('Body:', emailBody)
+  console.log('=== END EMAIL ===')
+  
+  // TODO: In production, integrate with SendGrid/Mailgun/Resend API
+  // Example with Resend:
+  // await fetch('https://api.resend.com/emails', {
+  //   method: 'POST',
+  //   headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     from: 'noreply@hoteltermal.al',
+  //     to: settingsData.adminEmail,
+  //     subject: 'New Reservation - ' + booking.guestName,
+  //     text: emailBody
+  //   })
+  // })
+  
+  return true
+}
 
 const app = new Hono()
 
@@ -196,30 +285,136 @@ app.use('/static/*', serveStatic())
 
 // ============== API ROUTES ==============
 
-// Check availability
+// Check availability - ADVANCED INVENTORY LOGIC
+// Algorithm: Count bookings for Room Type X on requested dates
+// If Count < Room X.quantity, show as Available
+// If Count >= Room X.quantity, show as Full
 app.post('/api/check-availability', async (c) => {
   const { checkIn, checkOut, guests } = await c.req.json()
   
-  const checkInDate = new Date(checkIn)
-  const checkOutDate = new Date(checkOut)
-  
-  // Find available rooms
+  // Find available rooms based on inventory
   const availableRooms = roomsData.filter(room => {
     if (room.capacity < guests) return false
     
-    // Check if room is booked during requested dates
-    const isBooked = bookingsData.some(booking => {
-      if (booking.roomId !== room.id || booking.status === 'cancelled') return false
-      const bookingStart = new Date(booking.checkIn)
-      const bookingEnd = new Date(booking.checkOut)
-      return (checkInDate < bookingEnd && checkOutDate > bookingStart)
-    })
+    // Count how many bookings exist for this room type in the date range
+    const bookedCount = countBookingsForRoom(room.id, checkIn, checkOut)
+    const totalQuantity = room.quantity || 1 // Default to 1 if not set
     
-    return !isBooked
+    // Room is available if booked count is less than total quantity
+    return bookedCount < totalQuantity
+  }).map(room => {
+    // Add availability info to each room
+    const bookedCount = countBookingsForRoom(room.id, checkIn, checkOut)
+    const totalQuantity = room.quantity || 1
+    return {
+      ...room,
+      availableUnits: totalQuantity - bookedCount,
+      totalUnits: totalQuantity
+    }
   })
   
-  return c.json({ available: availableRooms.length > 0, rooms: availableRooms, count: availableRooms.length })
+  return c.json({ 
+    available: availableRooms.length > 0, 
+    rooms: availableRooms, 
+    count: availableRooms.length 
+  })
 })
+
+// ============== SETTINGS API ROUTES ==============
+
+// Get public settings (for frontend - excludes sensitive data)
+app.get('/api/settings/public', (c) => {
+  return c.json({
+    hotelName: settingsData.hotelName,
+    logoUrl: settingsData.logoUrl
+  })
+})
+
+// Get all settings (admin only)
+app.get('/api/settings', (c) => {
+  return c.json({
+    hotelName: settingsData.hotelName,
+    logoUrl: settingsData.logoUrl,
+    adminEmail: settingsData.adminEmail,
+    smtpConfigured: !!settingsData.smtpPassword,
+    adminUser: settingsData.adminUser
+  })
+})
+
+// Update settings (admin only)
+app.put('/api/settings', async (c) => {
+  const updates = await c.req.json()
+  
+  // Update allowed fields
+  if (updates.hotelName !== undefined) settingsData.hotelName = updates.hotelName
+  if (updates.logoUrl !== undefined) settingsData.logoUrl = updates.logoUrl
+  if (updates.adminEmail !== undefined) settingsData.adminEmail = updates.adminEmail
+  if (updates.smtpPassword !== undefined && updates.smtpPassword) {
+    settingsData.smtpPassword = updates.smtpPassword
+  }
+  
+  return c.json({ success: true, message: 'Settings updated successfully' })
+})
+
+// Change admin credentials (requires old password verification)
+app.post('/api/settings/change-credentials', async (c) => {
+  const { oldPassword, newUsername, newPassword } = await c.req.json()
+  
+  // Verify old password
+  if (oldPassword !== settingsData.adminPassHash) {
+    return c.json({ success: false, error: 'Invalid current password' }, 401)
+  }
+  
+  // Update credentials
+  if (newUsername) settingsData.adminUser = newUsername
+  if (newPassword) settingsData.adminPassHash = newPassword
+  
+  // Clear all sessions to force re-login
+  sessions = {}
+  
+  return c.json({ success: true, message: 'Credentials updated. Please login again.' })
+})
+
+// ============== PHYSIOTHERAPY API ROUTES ==============
+
+// Get all physio services (public)
+app.get('/api/physio', (c) => {
+  return c.json(physioData)
+})
+
+// Get single physio service
+app.get('/api/physio/:id', (c) => {
+  const service = physioData.find(p => p.id === c.req.param('id'))
+  if (!service) return c.json({ error: 'Service not found' }, 404)
+  return c.json(service)
+})
+
+// Create physio service (admin)
+app.post('/api/physio', async (c) => {
+  const service = await c.req.json()
+  service.id = Date.now().toString()
+  physioData.push(service)
+  return c.json(service)
+})
+
+// Update physio service (admin)
+app.put('/api/physio/:id', async (c) => {
+  const id = c.req.param('id')
+  const updates = await c.req.json()
+  const index = physioData.findIndex(p => p.id === id)
+  if (index === -1) return c.json({ error: 'Service not found' }, 404)
+  physioData[index] = { ...physioData[index], ...updates }
+  return c.json(physioData[index])
+})
+
+// Delete physio service (admin)
+app.delete('/api/physio/:id', (c) => {
+  const id = c.req.param('id')
+  physioData = physioData.filter(p => p.id !== id)
+  return c.json({ success: true })
+})
+
+// ============== ROOMS API ROUTES ==============
 
 // Get all rooms
 app.get('/api/rooms', (c) => {
@@ -233,6 +428,15 @@ app.get('/api/rooms/:id', (c) => {
   return c.json(room)
 })
 
+// Create new room type (admin)
+app.post('/api/rooms', async (c) => {
+  const room = await c.req.json()
+  room.id = Date.now().toString()
+  room.quantity = room.quantity || 1
+  roomsData.push(room)
+  return c.json(room)
+})
+
 // Update room (admin)
 app.put('/api/rooms/:id', async (c) => {
   const id = c.req.param('id')
@@ -241,6 +445,13 @@ app.put('/api/rooms/:id', async (c) => {
   if (index === -1) return c.json({ error: 'Room not found' }, 404)
   roomsData[index] = { ...roomsData[index], ...updates }
   return c.json(roomsData[index])
+})
+
+// Delete room (admin)
+app.delete('/api/rooms/:id', (c) => {
+  const id = c.req.param('id')
+  roomsData = roomsData.filter(r => r.id !== id)
+  return c.json({ success: true })
 })
 
 // Get content
@@ -433,13 +644,37 @@ app.get('/api/bookings', (c) => {
   return c.json(bookingsData)
 })
 
-// Create booking
+// Create booking with email notification
 app.post('/api/bookings', async (c) => {
   const booking = await c.req.json()
   booking.id = Date.now().toString()
   booking.createdAt = new Date().toISOString().split('T')[0]
   booking.status = booking.status || 'pending'
+  
+  // Check inventory before accepting booking
+  const room = roomsData.find(r => r.id === booking.roomId)
+  if (room) {
+    const bookedCount = countBookingsForRoom(booking.roomId, booking.checkIn, booking.checkOut)
+    const totalQuantity = room.quantity || 1
+    
+    if (bookedCount >= totalQuantity) {
+      return c.json({ 
+        error: 'No availability for this room type on selected dates',
+        availableUnits: 0,
+        totalUnits: totalQuantity
+      }, 400)
+    }
+  }
+  
   bookingsData.push(booking)
+  
+  // Send email notification for new booking
+  try {
+    await sendEmailNotification(booking, room)
+  } catch (err) {
+    console.error('Failed to send email notification:', err)
+  }
+  
   return c.json(booking)
 })
 
@@ -460,10 +695,10 @@ app.delete('/api/bookings/:id', (c) => {
   return c.json({ success: true })
 })
 
-// Admin login
+// Admin login - uses dynamic credentials from settings
 app.post('/api/admin/login', async (c) => {
   const { username, password } = await c.req.json()
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
+  if (username === settingsData.adminUser && password === settingsData.adminPassHash) {
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
     sessions[token] = { user: username, expires: Date.now() + 24 * 60 * 60 * 1000 }
     return c.json({ success: true, token })

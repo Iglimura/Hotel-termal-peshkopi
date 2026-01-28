@@ -15,6 +15,9 @@ let expenseCategories = [];
 let revenueChart = null;
 let expensePieChart = null;
 let profitLossChart = null;
+// NEW: Settings and Physio state
+let settings = {};
+let physioServices = [];
 
 // Auth check
 const token = localStorage.getItem('adminToken');
@@ -42,16 +45,18 @@ async function verifyAuth() {
 // Fetch all data
 async function fetchAllData() {
   try {
-    const [statsRes, bookingsRes, roomsRes, reviewsRes, contentRes, postsRes, financeRes, categoriesRes, financeStatsRes] = await Promise.all([
+    const [statsRes, bookingsRes, roomsRes, reviewsRes, contentRes, postsRes, financeRes, categoriesRes, financeStatsRes, settingsRes, physioRes] = await Promise.all([
       fetch('/api/admin/stats'),
       fetch('/api/bookings'),
       fetch('/api/rooms'),
       fetch('/api/reviews'),
       fetch('/api/content'),
       fetch('/api/posts'),
-      fetch(`/api/finance?year=${selectedYear}`),
+      fetch('/api/finance?year=' + selectedYear),
       fetch('/api/finance/categories'),
-      fetch(`/api/finance/stats?year=${selectedYear}`)
+      fetch('/api/finance/stats?year=' + selectedYear),
+      fetch('/api/settings'),
+      fetch('/api/physio')
     ]);
     
     stats = await statsRes.json();
@@ -63,6 +68,8 @@ async function fetchAllData() {
     financeRecords = await financeRes.json();
     expenseCategories = await categoriesRes.json();
     financeStats = await financeStatsRes.json();
+    settings = await settingsRes.json();
+    physioServices = await physioRes.json();
   } catch (error) {
     console.error('Error fetching data:', error);
   }
@@ -101,10 +108,12 @@ function renderSidebar() {
     { id: 'calendar', icon: 'fa-calendar-alt', label: 'Calendar' },
     { id: 'bookings', icon: 'fa-book', label: 'Bookings' },
     { id: 'rooms', icon: 'fa-bed', label: 'Rooms CMS' },
+    { id: 'physio', icon: 'fa-hand-holding-medical', label: 'Fizioterapia' },
     { id: 'content', icon: 'fa-edit', label: 'Content CMS' },
     { id: 'reviews', icon: 'fa-star', label: 'Reviews' },
     { id: 'blog', icon: 'fa-newspaper', label: 'Blog Manager' },
     { id: 'finance', icon: 'fa-coins', label: 'Financa' },
+    { id: 'settings', icon: 'fa-cog', label: 'Settings' },
   ];
   
   return `
@@ -169,10 +178,12 @@ function renderCurrentView() {
     case 'calendar': return renderCalendar();
     case 'bookings': return renderBookings();
     case 'rooms': return renderRoomsCMS();
+    case 'physio': return renderPhysioCMS();
     case 'content': return renderContentCMS();
     case 'reviews': return renderReviewsCMS();
     case 'blog': return renderBlogCMS();
     case 'finance': return renderFinance();
+    case 'settings': return renderSettings();
     default: return renderDashboard();
   }
 }
@@ -473,45 +484,52 @@ function renderBookings() {
 
 // ============== ROOMS CMS ==============
 function renderRoomsCMS() {
-  return `
-    <div class="space-y-6">
-      <div class="flex justify-between items-center">
-        <h3 class="text-xl font-bold text-gray-800">Manage Rooms</h3>
-      </div>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        ${rooms.map(room => `
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="relative h-48">
-              <img src="${room.images[0]}" alt="${room.name.en}" class="w-full h-full object-cover">
-              <div class="absolute top-4 right-4">
-                <span class="px-3 py-1 bg-emerald-600 text-white rounded-full text-sm font-medium">€${room.pricePerPerson}/person</span>
-              </div>
-            </div>
-            <div class="p-6">
-              <h4 class="font-bold text-lg text-gray-800 mb-2">${room.name.en}</h4>
-              <p class="text-gray-600 text-sm mb-4">${room.description.en}</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                ${room.amenities.map(a => `
-                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">${a}</span>
-                `).join('')}
-              </div>
-              
-              <div class="flex justify-between items-center pt-4 border-t">
-                <span class="text-sm text-gray-500">Capacity: ${room.capacity} persons</span>
-                <button 
-                  onclick="editRoom('${room.id}')"
-                  class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm">
-                  <i class="fas fa-edit mr-1"></i>Edit
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
+  let roomsHTML = '';
+  rooms.forEach(room => {
+    const quantity = room.quantity || 1;
+    roomsHTML += '<div class="bg-white rounded-xl shadow-sm overflow-hidden">' +
+      '<div class="relative h-48">' +
+        '<img src="' + (room.images[0] || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800') + '" alt="' + room.name.en + '" class="w-full h-full object-cover">' +
+        '<div class="absolute top-4 right-4 flex gap-2">' +
+          '<span class="px-3 py-1 bg-emerald-600 text-white rounded-full text-sm font-medium">€' + room.pricePerPerson + '/person</span>' +
+          '<span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">' + quantity + ' dhoma</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="p-6">' +
+        '<h4 class="font-bold text-lg text-gray-800 mb-2">' + room.name.en + '</h4>' +
+        '<p class="text-gray-600 text-sm mb-4">' + room.description.en + '</p>' +
+        '<div class="flex flex-wrap gap-2 mb-4">' +
+          room.amenities.map(function(a) { return '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">' + a + '</span>'; }).join('') +
+        '</div>' +
+        '<div class="flex justify-between items-center pt-4 border-t">' +
+          '<span class="text-sm text-gray-500">Capacity: ' + room.capacity + ' persons | Total Rooms: ' + quantity + '</span>' +
+          '<div class="flex gap-2">' +
+            '<button onclick="editRoom(\'' + room.id + '\')" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm"><i class="fas fa-edit mr-1"></i>Edit</button>' +
+            '<button onclick="deleteRoom(\'' + room.id + '\')" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"><i class="fas fa-trash"></i></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  return '<div class="space-y-6">' +
+    '<div class="flex justify-between items-center">' +
+      '<h3 class="text-xl font-bold text-gray-800">Manage Rooms</h3>' +
+      '<button onclick="openRoomModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">' +
+        '<i class="fas fa-plus"></i> Create New Room Type' +
+      '</button>' +
+    '</div>' +
+    '<div class="bg-blue-50 border border-blue-200 rounded-xl p-4">' +
+      '<div class="flex items-start gap-3">' +
+        '<i class="fas fa-info-circle text-blue-600 mt-1"></i>' +
+        '<div>' +
+          '<h4 class="font-medium text-blue-800">Room Inventory System</h4>' +
+          '<p class="text-sm text-blue-600">Each room type can have multiple units. Set the "Total Rooms" field to define how many rooms of each type are available. The system will automatically track availability based on bookings.</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' + roomsHTML + '</div>' +
+  '</div>';
 }
 
 // Temporary storage for content images during editing
@@ -1697,6 +1715,392 @@ window.editExpense = (id) => {
 window.deleteExpense = async (id) => {
   if (!confirm('Jeni i sigurt që doni të fshini këtë shpenzim?')) return;
   await fetch('/api/finance/' + id, { method: 'DELETE' });
+  await fetchAllData();
+  renderAdmin();
+};
+
+// ============== PHYSIOTHERAPY CMS ==============
+function renderPhysioCMS() {
+  let servicesHTML = '';
+  physioServices.forEach(function(service) {
+    servicesHTML += '<div class="bg-white rounded-xl shadow-sm p-6">' +
+      '<div class="flex items-start justify-between">' +
+        '<div class="flex items-center gap-4">' +
+          '<div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">' +
+            '<i class="fas ' + (service.icon || 'fa-hand-sparkles') + ' text-emerald-600 text-xl"></i>' +
+          '</div>' +
+          '<div>' +
+            '<h4 class="font-bold text-lg text-gray-800">' + (service.title?.al || 'Untitled') + '</h4>' +
+            '<p class="text-sm text-gray-500">' + (service.title?.en || '') + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">€' + (service.price || 0) + '</span>' +
+      '</div>' +
+      '<p class="text-gray-600 text-sm mt-4">' + (service.description?.al || '') + '</p>' +
+      '<div class="flex justify-end gap-2 mt-4 pt-4 border-t">' +
+        '<button onclick="editPhysio(\'' + service.id + '\')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"><i class="fas fa-edit mr-1"></i>Edit</button>' +
+        '<button onclick="deletePhysio(\'' + service.id + '\')" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>';
+  });
+
+  const emptyState = physioServices.length === 0 
+    ? '<div class="bg-white rounded-xl p-8 text-center text-gray-500"><i class="fas fa-hand-holding-medical text-4xl mb-3 text-gray-300"></i><p>No physiotherapy services yet. Click "Add Service" to create one.</p></div>' 
+    : '';
+
+  return '<div class="space-y-6">' +
+    '<div class="flex justify-between items-center">' +
+      '<h3 class="text-xl font-bold text-gray-800">Fizioterapia - Shërbime</h3>' +
+      '<button onclick="openPhysioModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2">' +
+        '<i class="fas fa-plus"></i> Add Service' +
+      '</button>' +
+    '</div>' +
+    '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' + servicesHTML + '</div>' +
+    emptyState +
+  '</div>';
+}
+
+window.openPhysioModal = function(serviceData) {
+  serviceData = serviceData || null;
+  var modal = document.getElementById('modal');
+  var modalContent = document.getElementById('modalContent');
+  var isEdit = serviceData !== null;
+  var titleText = isEdit ? 'Edit Service' : 'Add New Service';
+  var btnText = isEdit ? 'Update' : 'Create';
+
+  var iconOptions = [
+    { value: 'fa-hand-sparkles', label: 'Massage' },
+    { value: 'fa-water', label: 'Water/Hydro' },
+    { value: 'fa-bolt', label: 'Electric' },
+    { value: 'fa-wave-square', label: 'Ultrasound' },
+    { value: 'fa-heartbeat', label: 'Heart/Rehab' },
+    { value: 'fa-user-injured', label: 'Back/Spine' },
+    { value: 'fa-spa', label: 'Spa' },
+    { value: 'fa-dumbbell', label: 'Exercise' }
+  ];
+  
+  var iconOptionsHTML = iconOptions.map(function(opt) {
+    var selected = serviceData?.icon === opt.value ? ' selected' : '';
+    return '<option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
+  }).join('');
+
+  modalContent.innerHTML = '<div class="p-6 max-h-[85vh] overflow-y-auto">' +
+    '<div class="flex justify-between items-center mb-6">' +
+      '<h3 class="text-xl font-bold text-gray-800">' + titleText + '</h3>' +
+      '<button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>' +
+    '</div>' +
+    '<form id="physioForm" class="space-y-4">' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Title (Albanian) *</label>' +
+        '<input type="text" name="titleAl" value="' + (serviceData?.title?.al || '') + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Title (English)</label>' +
+        '<input type="text" name="titleEn" value="' + (serviceData?.title?.en || '') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Description (Albanian) *</label>' +
+        '<textarea name="descAl" rows="3" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + (serviceData?.description?.al || '') + '</textarea></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Description (English)</label>' +
+        '<textarea name="descEn" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + (serviceData?.description?.en || '') + '</textarea></div>' +
+      '<div class="grid grid-cols-2 gap-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>' +
+          '<select name="icon" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + iconOptionsHTML + '</select></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Price (€)</label>' +
+          '<input type="number" name="price" value="' + (serviceData?.price || 30) + '" min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '</div>' +
+      '<div class="flex gap-3 pt-4">' +
+        '<button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>' +
+        '<button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">' + btnText + '</button>' +
+      '</div>' +
+    '</form></div>';
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  document.getElementById('physioForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var formData = new FormData(e.target);
+    
+    var service = {
+      title: { al: formData.get('titleAl'), en: formData.get('titleEn') || formData.get('titleAl') },
+      description: { al: formData.get('descAl'), en: formData.get('descEn') || formData.get('descAl') },
+      icon: formData.get('icon'),
+      price: parseInt(formData.get('price')) || 0
+    };
+
+    var url = isEdit ? '/api/physio/' + serviceData.id : '/api/physio';
+    var method = isEdit ? 'PUT' : 'POST';
+
+    await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(service) });
+    await fetchAllData();
+    closeModal();
+    renderAdmin();
+  });
+};
+
+window.editPhysio = function(id) {
+  var service = physioServices.find(function(s) { return s.id === id; });
+  if (service) openPhysioModal(service);
+};
+
+window.deletePhysio = async function(id) {
+  if (!confirm('Are you sure you want to delete this service?')) return;
+  await fetch('/api/physio/' + id, { method: 'DELETE' });
+  await fetchAllData();
+  renderAdmin();
+};
+
+// ============== SETTINGS MODULE ==============
+function renderSettings() {
+  var smtpStatus = settings.smtpConfigured 
+    ? '<span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i>Configured</span>' 
+    : '<span class="text-amber-600"><i class="fas fa-exclamation-circle mr-1"></i>Not configured</span>';
+
+  return '<div class="space-y-6">' +
+    // Header
+    '<div class="flex justify-between items-center">' +
+      '<h3 class="text-xl font-bold text-gray-800"><i class="fas fa-cog mr-2 text-emerald-600"></i>Settings</h3>' +
+    '</div>' +
+    
+    // General Settings Card
+    '<div class="bg-white rounded-xl shadow-sm p-6">' +
+      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-hotel text-emerald-600"></i>General Settings</h4>' +
+      '<div class="space-y-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>' +
+          '<input type="text" id="settingHotelName" value="' + (settings.hotelName || 'Hotel Termal Peshkopi') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Logo URL (leave empty for default icon)</label>' +
+          '<input type="text" id="settingLogoUrl" value="' + (settings.logoUrl || '') + '" placeholder="https://example.com/logo.png" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
+          (settings.logoUrl ? '<img src="' + settings.logoUrl + '" class="mt-2 h-12 object-contain" alt="Logo preview">' : '') + '</div>' +
+        '<button onclick="saveGeneralSettings()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-save mr-1"></i>Save General Settings</button>' +
+      '</div>' +
+    '</div>' +
+
+    // Email Notification Settings Card
+    '<div class="bg-white rounded-xl shadow-sm p-6">' +
+      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-envelope text-emerald-600"></i>Email Notifications</h4>' +
+      '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">' +
+        '<div class="flex items-start gap-2">' +
+          '<i class="fas fa-info-circle text-blue-600 mt-1"></i>' +
+          '<div class="text-sm text-blue-800">' +
+            '<p class="font-medium">Gmail App Password Required</p>' +
+            '<p>To send email notifications, you need to generate an App Password from your Google Account settings. Go to Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="space-y-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>' +
+          '<input type="email" id="settingAdminEmail" value="' + (settings.adminEmail || '') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Gmail App Password</label>' +
+          '<input type="password" id="settingSMTPPassword" placeholder="Enter new App Password to update" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' +
+          '<p class="text-xs text-gray-500 mt-1">SMTP Status: ' + smtpStatus + '</p></div>' +
+        '<button onclick="saveEmailSettings()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-save mr-1"></i>Save Email Settings</button>' +
+      '</div>' +
+    '</div>' +
+
+    // Security / Change Credentials Card
+    '<div class="bg-white rounded-xl shadow-sm p-6">' +
+      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-shield-alt text-emerald-600"></i>Change Admin Credentials</h4>' +
+      '<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">' +
+        '<div class="flex items-start gap-2">' +
+          '<i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i>' +
+          '<div class="text-sm text-amber-800">' +
+            '<p class="font-medium">Security Notice</p>' +
+            '<p>You will be logged out after changing your credentials. Current username: <strong>' + (settings.adminUser || 'admin') + '</strong></p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="space-y-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Current Password *</label>' +
+          '<input type="password" id="currentPassword" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Username (leave empty to keep current)</label>' +
+          '<input type="text" id="newUsername" placeholder="' + (settings.adminUser || 'admin') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Password (leave empty to keep current)</label>' +
+          '<input type="password" id="newPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>' +
+          '<input type="password" id="confirmPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<button onclick="changeCredentials()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"><i class="fas fa-key mr-1"></i>Change Credentials</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+window.saveGeneralSettings = async function() {
+  var hotelName = document.getElementById('settingHotelName').value;
+  var logoUrl = document.getElementById('settingLogoUrl').value;
+
+  await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hotelName: hotelName, logoUrl: logoUrl })
+  });
+
+  alert('General settings saved!');
+  await fetchAllData();
+  renderAdmin();
+};
+
+window.saveEmailSettings = async function() {
+  var adminEmail = document.getElementById('settingAdminEmail').value;
+  var smtpPassword = document.getElementById('settingSMTPPassword').value;
+
+  var body = { adminEmail: adminEmail };
+  if (smtpPassword) body.smtpPassword = smtpPassword;
+
+  await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  alert('Email settings saved!');
+  document.getElementById('settingSMTPPassword').value = '';
+  await fetchAllData();
+  renderAdmin();
+};
+
+window.changeCredentials = async function() {
+  var currentPassword = document.getElementById('currentPassword').value;
+  var newUsername = document.getElementById('newUsername').value;
+  var newPassword = document.getElementById('newPassword').value;
+  var confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (!currentPassword) {
+    alert('Please enter your current password');
+    return;
+  }
+
+  if (newPassword && newPassword !== confirmPassword) {
+    alert('New passwords do not match');
+    return;
+  }
+
+  if (!newUsername && !newPassword) {
+    alert('Please enter a new username or password');
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/settings/change-credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        oldPassword: currentPassword,
+        newUsername: newUsername || null,
+        newPassword: newPassword || null
+      })
+    });
+
+    var data = await res.json();
+
+    if (data.success) {
+      alert('Credentials updated successfully. You will be logged out now.');
+      localStorage.removeItem('adminToken');
+      window.location.href = '/login';
+    } else {
+      alert('Error: ' + (data.error || 'Failed to update credentials'));
+    }
+  } catch (err) {
+    alert('Error updating credentials');
+  }
+};
+
+// ============== ROOM CREATION MODAL ==============
+window.openRoomModal = function(roomData) {
+  roomData = roomData || null;
+  var modal = document.getElementById('modal');
+  var modalContent = document.getElementById('modalContent');
+  var isEdit = roomData !== null;
+  var titleText = isEdit ? 'Edit Room Type' : 'Create New Room Type';
+  var btnText = isEdit ? 'Update' : 'Create';
+  
+  // Initialize temp images for new room
+  tempRoomImages = roomData ? roomData.images.slice() : [];
+  
+  var imagesGrid = tempRoomImages.map(function(img, index) {
+    return '<div class="relative group">' +
+      '<img src="' + img + '" alt="Room ' + (index + 1) + '" class="w-full h-20 object-cover rounded-lg border">' +
+      '<button type="button" onclick="removeRoomImage(' + index + ')" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>' +
+    '</div>';
+  }).join('');
+
+  modalContent.innerHTML = '<div class="p-6 max-h-[85vh] overflow-y-auto">' +
+    '<div class="flex justify-between items-center mb-6">' +
+      '<h3 class="text-xl font-bold text-gray-800">' + titleText + '</h3>' +
+      '<button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>' +
+    '</div>' +
+    '<form id="roomForm" class="space-y-4">' +
+      '<div class="grid grid-cols-2 gap-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Name (Albanian) *</label>' +
+          '<input type="text" name="nameAl" value="' + (roomData?.name?.al || '') + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Name (English) *</label>' +
+          '<input type="text" name="nameEn" value="' + (roomData?.name?.en || '') + '" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '</div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Description (Albanian)</label>' +
+        '<textarea name="descAl" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + (roomData?.description?.al || '') + '</textarea></div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Description (English)</label>' +
+        '<textarea name="descEn" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">' + (roomData?.description?.en || '') + '</textarea></div>' +
+      '<div class="grid grid-cols-3 gap-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Price per Person (€)</label>' +
+          '<input type="number" name="pricePerPerson" value="' + (roomData?.pricePerPerson || 30) + '" min="1" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Capacity (persons)</label>' +
+          '<input type="number" name="capacity" value="' + (roomData?.capacity || 2) + '" min="1" max="10" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Total Rooms (Quantity)</label>' +
+          '<input type="number" name="quantity" value="' + (roomData?.quantity || 1) + '" min="1" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+      '</div>' +
+      '<div><label class="block text-sm font-medium text-gray-700 mb-1">Amenities (comma separated)</label>' +
+        '<input type="text" name="amenities" value="' + (roomData?.amenities?.join(', ') || 'wifi, tv, heating, bathroom') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="wifi, tv, bathroom"></div>' +
+      '<div class="border rounded-lg p-4 bg-gray-50">' +
+        '<label class="block text-sm font-medium text-gray-700 mb-3"><i class="fas fa-images mr-1 text-emerald-600"></i>Room Images (<span id="roomImgCount">' + tempRoomImages.length + '</span>)</label>' +
+        '<div id="roomImagesGrid" class="grid grid-cols-3 gap-2 mb-3">' + imagesGrid + '</div>' +
+        '<div class="flex gap-2">' +
+          '<input type="text" id="newRoomImageUrl" placeholder="Paste image URL here..." class="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500">' +
+          '<button type="button" onclick="addRoomImage()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm"><i class="fas fa-plus mr-1"></i>Add</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="flex gap-3 pt-4">' +
+        '<button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>' +
+        '<button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">' + btnText + '</button>' +
+      '</div>' +
+    '</form></div>';
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  document.getElementById('roomForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var formData = new FormData(e.target);
+    
+    var room = {
+      name: {
+        al: formData.get('nameAl'),
+        en: formData.get('nameEn'),
+        de: formData.get('nameEn'),
+        it: formData.get('nameEn'),
+        fr: formData.get('nameEn')
+      },
+      description: {
+        al: formData.get('descAl') || '',
+        en: formData.get('descEn') || '',
+        de: formData.get('descEn') || '',
+        it: formData.get('descEn') || '',
+        fr: formData.get('descEn') || ''
+      },
+      pricePerPerson: parseInt(formData.get('pricePerPerson')),
+      capacity: parseInt(formData.get('capacity')),
+      quantity: parseInt(formData.get('quantity')),
+      amenities: formData.get('amenities').split(',').map(function(a) { return a.trim(); }).filter(function(a) { return a; }),
+      images: tempRoomImages
+    };
+
+    var url = isEdit ? '/api/rooms/' + roomData.id : '/api/rooms';
+    var method = isEdit ? 'PUT' : 'POST';
+
+    await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(room) });
+    await fetchAllData();
+    closeModal();
+    renderAdmin();
+  });
+};
+
+window.deleteRoom = async function(id) {
+  if (!confirm('Are you sure you want to delete this room type? This cannot be undone.')) return;
+  await fetch('/api/rooms/' + id, { method: 'DELETE' });
   await fetchAllData();
   renderAdmin();
 };

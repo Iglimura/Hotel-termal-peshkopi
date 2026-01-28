@@ -304,6 +304,9 @@ let rooms = [];
 let reviews = [];
 let posts = [];
 let menuOpen = false;
+// NEW: Settings and Physio data
+let settings = {};
+let physioServices = [];
 
 // ============== UTILITY FUNCTIONS ==============
 const t = (key) => {
@@ -342,16 +345,20 @@ const amenityNames = {
 // ============== FETCH DATA ==============
 async function fetchData() {
   try {
-    const [contentRes, roomsRes, reviewsRes, postsRes] = await Promise.all([
+    const [contentRes, roomsRes, reviewsRes, postsRes, settingsRes, physioRes] = await Promise.all([
       fetch('/api/content'),
       fetch('/api/rooms'),
       fetch('/api/reviews'),
-      fetch('/api/posts')
+      fetch('/api/posts'),
+      fetch('/api/settings/public'),
+      fetch('/api/physio')
     ]);
     content = await contentRes.json();
     rooms = await roomsRes.json();
     reviews = await reviewsRes.json();
     posts = await postsRes.json();
+    settings = await settingsRes.json();
+    physioServices = await physioRes.json();
   } catch (error) {
     console.error('Error fetching data:', error);
   }
@@ -478,6 +485,14 @@ function renderApp() {
 }
 
 function renderNavigation() {
+  // Dynamic logo - use custom logo if set, otherwise default icon
+  const logoHTML = settings.logoUrl 
+    ? '<img src="' + settings.logoUrl + '" alt="' + (settings.hotelName || 'Hotel Termal') + '" class="w-10 h-10 rounded-full object-cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="w-10 h-10 bg-emerald-600 rounded-full items-center justify-center hidden"><i class="fas fa-spa text-white text-lg"></i></div>'
+    : '<div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center"><i class="fas fa-spa text-white text-lg"></i></div>';
+  
+  const hotelName = settings.hotelName || 'Hotel Termal';
+  const shortName = hotelName.length > 15 ? 'Hotel Termal' : hotelName;
+
   return `
     <nav class="fixed top-0 left-0 right-0 z-50 glass shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-3">
@@ -493,12 +508,10 @@ function renderNavigation() {
             </select>
           </div>
           
-          <!-- Logo -->
+          <!-- Logo (Dynamic from Settings) -->
           <a href="#" class="flex items-center gap-2">
-            <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-              <i class="fas fa-spa text-white text-lg"></i>
-            </div>
-            <span class="font-serif text-lg font-bold text-emerald-800 hidden md:block">Hotel Termal</span>
+            ${logoHTML}
+            <span class="font-serif text-lg font-bold text-emerald-800 hidden md:block">${shortName}</span>
           </a>
           
           <!-- Desktop Nav -->
@@ -782,7 +795,50 @@ function renderWellness() {
 }
 
 function renderPhysiotherapy() {
-  const services = content.physiotherapy?.services || [];
+  // Use dynamic physio services from database
+  const services = physioServices.length > 0 ? physioServices : [];
+  
+  // Build services HTML
+  let servicesHTML = '';
+  services.forEach(function(service) {
+    const title = getLocalizedText(service.title) || 'Service';
+    const desc = getLocalizedText(service.description) || '';
+    const icon = service.icon || 'fa-check';
+    const price = service.price || 0;
+    
+    servicesHTML += `
+      <div class="bg-emerald-50 rounded-xl p-6 hover:bg-emerald-100 transition group">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <i class="fas ${icon} text-white text-xl"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="text-gray-800 font-semibold text-lg">${title}</h3>
+              <span class="text-emerald-600 font-bold">€${price}</span>
+            </div>
+            <p class="text-gray-600 text-sm">${desc}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  // Fallback if no services
+  if (services.length === 0) {
+    const fallbackServices = content.physiotherapy?.services || [];
+    fallbackServices.forEach(function(service) {
+      servicesHTML += `
+        <div class="bg-emerald-50 rounded-xl p-6 flex items-center gap-4 hover:bg-emerald-100 transition group">
+          <div class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <i class="fas fa-check text-white"></i>
+          </div>
+          <span class="text-gray-700 font-medium">${getLocalizedText(service)}</span>
+        </div>
+      `;
+    });
+  }
+
   return `
     <section id="physio" class="py-20 bg-white">
       <div class="max-w-7xl mx-auto px-4">
@@ -793,14 +849,7 @@ function renderPhysiotherapy() {
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          ${services.map((service, i) => `
-            <div class="bg-emerald-50 rounded-xl p-6 flex items-center gap-4 hover:bg-emerald-100 transition group">
-              <div class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <i class="fas fa-check text-white"></i>
-              </div>
-              <span class="text-gray-700 font-medium">${getLocalizedText(service)}</span>
-            </div>
-          `).join('')}
+          ${servicesHTML}
         </div>
         
         <div class="text-center mt-10">
