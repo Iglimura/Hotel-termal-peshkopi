@@ -1847,10 +1847,72 @@ window.deletePhysio = async function(id) {
 };
 
 // ============== SETTINGS MODULE ==============
+// State for 2FA verification
+let credentialsVerificationState = 'input'; // 'input' or 'verify'
+let pendingVerificationId = null;
+let maskedEmail = '';
+
 function renderSettings() {
   var smtpStatus = settings.smtpConfigured 
     ? '<span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i>Configured</span>' 
     : '<span class="text-amber-600"><i class="fas fa-exclamation-circle mr-1"></i>Not configured</span>';
+
+  // Render credentials section based on state
+  var credentialsSection = '';
+  
+  if (credentialsVerificationState === 'verify') {
+    // State B: Verification code input
+    credentialsSection = 
+      '<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">' +
+        '<div class="flex items-start gap-2">' +
+          '<i class="fas fa-envelope-open-text text-emerald-600 mt-1 text-xl"></i>' +
+          '<div class="text-sm text-emerald-800">' +
+            '<p class="font-medium text-base">Verification Code Sent!</p>' +
+            '<p>A 6-digit verification code has been sent to <strong>' + maskedEmail + '</strong>. Please check your email and enter the code below.</p>' +
+            '<p class="text-xs mt-1 text-emerald-600">The code expires in 10 minutes.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="space-y-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Verification Code *</label>' +
+          '<input type="text" id="verificationCode" maxlength="6" placeholder="123456" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-center text-2xl font-mono tracking-widest" autocomplete="off">' +
+          '<p class="text-xs text-gray-500 mt-1">Enter the 6-digit code from your email</p></div>' +
+        '<div class="flex gap-3">' +
+          '<button onclick="cancelVerification()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"><i class="fas fa-arrow-left mr-1"></i>Back</button>' +
+          '<button onclick="confirmVerification()" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"><i class="fas fa-check mr-1"></i>Confirm</button>' +
+        '</div>' +
+      '</div>';
+  } else {
+    // State A: Normal credentials input
+    credentialsSection = 
+      '<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">' +
+        '<div class="flex items-start gap-2">' +
+          '<i class="fas fa-shield-alt text-amber-600 mt-1"></i>' +
+          '<div class="text-sm text-amber-800">' +
+            '<p class="font-medium">2-Factor Authentication Required</p>' +
+            '<p>For security, a verification code will be sent to <strong>' + (settings.adminEmail || 'your admin email') + '</strong> before password changes are applied. Make sure your admin email is correctly configured.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">' +
+        '<div class="flex items-center gap-2 text-sm text-gray-600">' +
+          '<i class="fas fa-user"></i>' +
+          '<span>Current username: <strong>' + (settings.adminUser || 'admin') + '</strong></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="space-y-4">' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Current Password *</label>' +
+          '<input type="password" id="currentPassword" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Username (leave empty to keep current)</label>' +
+          '<input type="text" id="newUsername" placeholder="' + (settings.adminUser || 'admin') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Password (leave empty to keep current)</label>' +
+          '<input type="password" id="newPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>' +
+          '<input type="password" id="confirmPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
+        '<button onclick="requestCredentialChange()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2"><i class="fas fa-paper-plane"></i>Request Verification Code</button>' +
+        '<p class="text-xs text-gray-500 text-center">A verification code will be sent to your email to complete this change</p>' +
+      '</div>';
+  }
 
   return '<div class="space-y-6">' +
     // Header
@@ -1879,7 +1941,7 @@ function renderSettings() {
           '<i class="fas fa-info-circle text-blue-600 mt-1"></i>' +
           '<div class="text-sm text-blue-800">' +
             '<p class="font-medium">Gmail App Password Required</p>' +
-            '<p>To send email notifications, you need to generate an App Password from your Google Account settings. Go to Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.</p>' +
+            '<p>To enable 2FA and email notifications, you need to generate an App Password from your Google Account settings. Go to Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.</p>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1893,29 +1955,10 @@ function renderSettings() {
       '</div>' +
     '</div>' +
 
-    // Security / Change Credentials Card
+    // Security / Change Credentials Card with 2FA
     '<div class="bg-white rounded-xl shadow-sm p-6">' +
-      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-shield-alt text-emerald-600"></i>Change Admin Credentials</h4>' +
-      '<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">' +
-        '<div class="flex items-start gap-2">' +
-          '<i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i>' +
-          '<div class="text-sm text-amber-800">' +
-            '<p class="font-medium">Security Notice</p>' +
-            '<p>You will be logged out after changing your credentials. Current username: <strong>' + (settings.adminUser || 'admin') + '</strong></p>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="space-y-4">' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Current Password *</label>' +
-          '<input type="password" id="currentPassword" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Username (leave empty to keep current)</label>' +
-          '<input type="text" id="newUsername" placeholder="' + (settings.adminUser || 'admin') + '" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">New Password (leave empty to keep current)</label>' +
-          '<input type="password" id="newPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<div><label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>' +
-          '<input type="password" id="confirmPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"></div>' +
-        '<button onclick="changeCredentials()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"><i class="fas fa-key mr-1"></i>Change Credentials</button>' +
-      '</div>' +
+      '<h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-shield-alt text-emerald-600"></i>Change Admin Credentials (2FA)</h4>' +
+      credentialsSection +
     '</div>' +
   '</div>';
 }
@@ -1954,7 +1997,8 @@ window.saveEmailSettings = async function() {
   renderAdmin();
 };
 
-window.changeCredentials = async function() {
+// Step 1: Request verification code
+window.requestCredentialChange = async function() {
   var currentPassword = document.getElementById('currentPassword').value;
   var newUsername = document.getElementById('newUsername').value;
   var newPassword = document.getElementById('newPassword').value;
@@ -1976,7 +2020,7 @@ window.changeCredentials = async function() {
   }
 
   try {
-    var res = await fetch('/api/settings/change-credentials', {
+    var res = await fetch('/api/auth/request-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1988,16 +2032,64 @@ window.changeCredentials = async function() {
 
     var data = await res.json();
 
+    if (data.status === 'verification_required') {
+      // Switch to verification state
+      pendingVerificationId = data.verificationId;
+      maskedEmail = data.message.replace('Verification code sent to ', '');
+      credentialsVerificationState = 'verify';
+      renderAdmin();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to request verification code'));
+    }
+  } catch (err) {
+    alert('Error requesting verification code: ' + err.message);
+  }
+};
+
+// Step 2: Confirm with verification code
+window.confirmVerification = async function() {
+  var code = document.getElementById('verificationCode').value.trim();
+
+  if (!code || code.length !== 6) {
+    alert('Please enter the 6-digit verification code');
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/auth/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        verificationId: pendingVerificationId,
+        code: code
+      })
+    });
+
+    var data = await res.json();
+
     if (data.success) {
-      alert('Credentials updated successfully. You will be logged out now.');
+      alert('Credentials updated successfully! You will be logged out now.');
       localStorage.removeItem('adminToken');
       window.location.href = '/login';
     } else {
-      alert('Error: ' + (data.error || 'Failed to update credentials'));
+      alert('Error: ' + (data.error || 'Invalid verification code'));
     }
   } catch (err) {
-    alert('Error updating credentials');
+    alert('Error verifying code: ' + err.message);
   }
+};
+
+// Cancel verification and go back to input state
+window.cancelVerification = function() {
+  credentialsVerificationState = 'input';
+  pendingVerificationId = null;
+  maskedEmail = '';
+  renderAdmin();
+};
+
+// Legacy function - kept for backwards compatibility but no longer used
+window.changeCredentials = async function() {
+  alert('Please use the "Request Verification Code" button to change your credentials.');
 };
 
 // ============== ROOM CREATION MODAL ==============

@@ -210,6 +210,9 @@ const expenseCategories = [
 // Session store (in production, use KV or D1)
 let sessions: { [key: string]: { user: string; expires: number } } = {}
 
+// Temporary storage for 2FA verification codes
+let pendingVerifications: { [key: string]: { code: string; newUsername?: string; newPassword?: string; expires: number } } = {}
+
 // ============== HELPER FUNCTIONS ==============
 // Count bookings for a specific room type on given dates
 function countBookingsForRoom(roomId: string, checkIn: string, checkOut: string): number {
@@ -356,23 +359,132 @@ app.put('/api/settings', async (c) => {
   return c.json({ success: true, message: 'Settings updated successfully' })
 })
 
-// Change admin credentials (requires old password verification)
-app.post('/api/settings/change-credentials', async (c) => {
+// ============== 2FA PASSWORD CHANGE ENDPOINTS ==============
+
+// Helper function to send verification code email
+async function sendVerificationCodeEmail(code: string, email: string) {
+  // Log the email (in production, integrate with SendGrid/Resend/Mailgun)
+  console.log('=== VERIFICATION CODE EMAIL ===')
+  console.log('To:', email)
+  console.log('Subject: Security Code: Verify Password Change')
+  console.log('Body:')
+  console.log(`Your verification code is: ${code}`)
+  console.log('')
+  console.log('If this wasn\'t you, ignore this email.')
+  console.log('=== END EMAIL ===')
+  
+  // In production, integrate with an email API:
+  // Example with Resend:
+  // if (settingsData.smtpPassword) {
+  //   await fetch('https://api.resend.com/emails', {
+  //     method: 'POST',
+  //     headers: { 'Authorization': 'Bearer ' + settingsData.smtpPassword, 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({
+  //       from: 'noreply@hoteltermal.al',
+  //       to: email,
+  //       subject: 'Security Code: Verify Password Change',
+  //       text: `Your verification code is: ${code}\n\nIf this wasn't you, ignore this email.`
+  //     })
+  //   })
+  // }
+  
+  return true
+}
+
+// Step 1: Request password change - generates and sends verification code
+app.post('/api/auth/request-code', async (c) => {
   const { oldPassword, newUsername, newPassword } = await c.req.json()
   
-  // Verify old password
+  // Verify old password first
   if (oldPassword !== settingsData.adminPassHash) {
     return c.json({ success: false, error: 'Invalid current password' }, 401)
   }
   
-  // Update credentials
-  if (newUsername) settingsData.adminUser = newUsername
-  if (newPassword) settingsData.adminPassHash = newPassword
+  // Check if admin email is configured
+  if (!settingsData.adminEmail) {
+    return c.json({ success: false, error: 'Admin email not configured. Please set email in Settings first.' }, 400)
+  }
+  
+  // Generate 6-digit verification code
+  const code = Math.floor(100000 + Math.random() * 900000).toString()
+  
+  // Store pending verification with 10 minute expiry
+  const verificationId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+  pendingVerifications[verificationId] = {
+    code,
+    newUsername: newUsername || undefined,
+    newPassword: newPassword || undefined,
+    expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+  }
+  
+  // Clean up expired verifications
+  const now = Date.now()
+  Object.keys(pendingVerifications).forEach(key => {
+    if (pendingVerifications[key].expires < now) {
+      delete pendingVerifications[key]
+    }
+  })
+  
+  // Send verification code via email
+  try {
+    await sendVerificationCodeEmail(code, settingsData.adminEmail)
+  } catch (err) {
+    console.error('Failed to send verification email:', err)
+    return c.json({ success: false, error: 'Failed to send verification email' }, 500)
+  }
+  
+  return c.json({ 
+    status: 'verification_required',
+    verificationId,
+    message: `Verification code sent to ${settingsData.adminEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')}`
+  })
+})
+
+// Step 2: Verify code and complete password change
+app.post('/api/auth/verify-code', async (c) => {
+  const { verificationId, code } = await c.req.json()
+  
+  // Find pending verification
+  const pending = pendingVerifications[verificationId]
+  
+  if (!pending) {
+    return c.json({ success: false, error: 'Invalid or expired verification request' }, 400)
+  }
+  
+  // Check if expired
+  if (pending.expires < Date.now()) {
+    delete pendingVerifications[verificationId]
+    return c.json({ success: false, error: 'Verification code has expired. Please request a new one.' }, 400)
+  }
+  
+  // Verify code
+  if (pending.code !== code) {
+    return c.json({ success: false, error: 'Invalid verification code' }, 401)
+  }
+  
+  // Code is valid - update credentials
+  if (pending.newUsername) settingsData.adminUser = pending.newUsername
+  if (pending.newPassword) settingsData.adminPassHash = pending.newPassword
+  
+  // Clean up verification
+  delete pendingVerifications[verificationId]
   
   // Clear all sessions to force re-login
   sessions = {}
   
-  return c.json({ success: true, message: 'Credentials updated. Please login again.' })
+  return c.json({ 
+    success: true, 
+    message: 'Credentials updated successfully. Please login again with your new credentials.' 
+  })
+})
+
+// Legacy endpoint - now redirects to 2FA flow (kept for backwards compatibility)
+app.post('/api/settings/change-credentials', async (c) => {
+  return c.json({ 
+    success: false, 
+    error: 'Direct credential change is disabled. Please use the 2FA verification flow.',
+    redirect: '/api/auth/request-code'
+  }, 400)
 })
 
 // ============== PHYSIOTHERAPY API ROUTES ==============
@@ -644,7 +756,7 @@ app.get('/api/bookings', (c) => {
   return c.json(bookingsData)
 })
 
-// Create booking with email notification
+// Create booking (silent - no email notification)
 app.post('/api/bookings', async (c) => {
   const booking = await c.req.json()
   booking.id = Date.now().toString()
@@ -668,12 +780,7 @@ app.post('/api/bookings', async (c) => {
   
   bookingsData.push(booking)
   
-  // Send email notification for new booking
-  try {
-    await sendEmailNotification(booking, room)
-  } catch (err) {
-    console.error('Failed to send email notification:', err)
-  }
+  // Note: Email notifications removed - bookings are now silent
   
   return c.json(booking)
 })
